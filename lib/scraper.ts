@@ -405,9 +405,10 @@ export async function runScraper(userId: string, query?: string): Promise<Scrape
     });
 
     if (insertedJobs.length > 0) {
-      sendNewJobsEmail(insertedJobs).catch(console.error);
+      sendNewJobsEmail(userId, insertedJobs).catch(console.error);
       sendTelegramNotification(userId, insertedJobs).catch(console.error);
     }
+
 
     return {
       jobsFound: deduplicatedJobs.length,

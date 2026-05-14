@@ -92,8 +92,8 @@ function buildEmailHtml(jobs: JobAlert[]): string {
   `;
 }
 
-export async function sendNewJobsEmail(jobs: JobAlert[]): Promise<void> {
-  const settings = await getAppSettings();
+export async function sendNewJobsEmail(userId: string, jobs: JobAlert[]): Promise<void> {
+  const settings = await getAppSettings(userId);
 
   if (!settings.emailUser || !settings.emailPass || !settings.emailTo) {
     console.log('[Email] Skipping — email credentials not configured in settings');
