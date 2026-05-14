@@ -14,12 +14,29 @@ export async function GET(request: NextRequest) {
   try {
     // Dynamic import to avoid issues with non-Node environments
     const { runScraper } = await import('@/lib/scraper');
-    const result = await runScraper();
+    const { prisma } = await import('@/lib/prisma');
+
+    // Fetch all users who have settings (active users)
+    const users = await prisma.settings.findMany({
+      select: { userId: true }
+    });
+
+    const results = [];
+    for (const user of users) {
+      try {
+        const result = await runScraper(user.userId);
+        results.push({ userId: user.userId, success: true, result });
+      } catch (err: any) {
+        console.error(`[CRON] Failed for user ${user.userId}:`, err.message);
+        results.push({ userId: user.userId, success: false, error: err.message });
+      }
+    }
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      result,
+      processedUsers: users.length,
+      results,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Cron job failed';
@@ -27,3 +44,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
+
