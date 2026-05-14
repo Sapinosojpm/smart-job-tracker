@@ -35,14 +35,17 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
   const isLandingPage = request.nextUrl.pathname === '/';
   const isPublicApi = request.nextUrl.pathname === '/api/global-stats';
+  const hasAuthCode = request.nextUrl.searchParams.has('code');
+  const hasError = request.nextUrl.searchParams.has('error');
 
-  if (!user && !isAuthPage && !isLandingPage && !isPublicApi) {
+  if (!user && !isAuthPage && !isLandingPage && !isPublicApi && !hasAuthCode && !hasError) {
     // no user, redirect to landing page with auto-login trigger
     const url = request.nextUrl.clone()
     url.pathname = '/'
     url.searchParams.set('login', 'true')
     return NextResponse.redirect(url)
   }
+
 
   // If user is logged in and tries to access login page, send to jobs
   if (user && isAuthPage) {
