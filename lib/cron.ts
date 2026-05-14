@@ -14,10 +14,20 @@ export function initCronJob(): void {
   cron.schedule(schedule, async () => {
     console.log(`[CRON] Running scraper at ${new Date().toISOString()}`);
     try {
-      const result = await runScraper();
-      console.log(`[CRON] Done — inserted: ${result.jobsInserted}, duplicates: ${result.jobsDuplicated}`);
+      const { prisma } = await import('./prisma');
+      const users = await prisma.settings.findMany({ select: { userId: true } });
+
+      for (const user of users) {
+        try {
+          const result = await runScraper(user.userId);
+          console.log(`[CRON] Done for ${user.userId} — inserted: ${result.jobsInserted}`);
+        } catch (err: any) {
+          console.error(`[CRON] Failed for ${user.userId}:`, err.message);
+        }
+      }
     } catch (err) {
-      console.error('[CRON] Scraper error:', err);
+      console.error('[CRON] Global error:', err);
     }
   });
+
 }
