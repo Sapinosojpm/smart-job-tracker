@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+model Job {
+  id           String        @id @default(cuid())
+  userId       String        // The Supabase Auth User ID
+  title        String
+  company      String
+  link         String
+  source       String
+  location     String?
+  description  String?
+  salary       String?
+  postedAt     DateTime?
+  isApplied    Boolean       @default(false)
+  isNewListing Boolean       @default(true)
+  
+  // Premium Features
+  isScam       Boolean       @default(false)
+  scamScore    Float         @default(0)
+  scamReason   String?
+  salaryMin    Float?
+  salaryMax    Float?
+  currency     String?       @default("PHP")
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
+  @@unique([link, userId]) // Allow same job link for different users
+}
+
+model Application {
+  id                String   @id @default(cuid())
+  userId            String   // The Supabase Auth User ID
+  jobId             String
+  job               Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicationDate   DateTime @default(now())
+  platform          String
+  companyName       String
+  jobTitle          String
+  jobLink           String
+  status            String   @default("Pending")
+  notes             String?
+  yearsOfExperience String?
+  requiredSkills    String[]
+  skillsMet         Boolean  @default(false)
+  remarks           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Settings {
+  id               String   @id @default(cuid())
+  userId           String   @unique // One settings per user
+  plan             Plan     @default(FREE)
+  scraperQuery     String?
+  keywordFilters   String[]
+  scrapeIndeed     Boolean  @default(true)
+  scrapeJobStreet  Boolean  @default(true)
+  scrapeOnlineJobs Boolean  @default(true)
+  scrapeUpwork     Boolean  @default(true)
+  scrapeLinkedIn   Boolean  @default(true)
+  scrapeRemoteOK   Boolean  @default(true)
+  emailUser        String?
+  emailPass        String?
+  emailTo          String?
+  telegramBotToken String?
+  telegramChatId   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ScraperLog {
+  id             String    @id @default(cuid())
+  userId         String    // The Supabase Auth User ID
+  startedAt      DateTime  @default(now())
+  finishedAt     DateTime?
+  status         String
+  keywords       String[]
+  jobsFound      Int       @default(0)
+  jobsInserted   Int       @default(0)
+  jobsDuplicated Int       @default(0)
+  error          String?
+  source         String?
+}

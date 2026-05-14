@@ -1,26 +1,121 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  --color-brand: #1a56db;
+  --color-brand-dark: #1447c0;
+  --color-brand-light: #eef2ff;
+  --color-brand-mid: #3b82f6;
+  --color-accent: #06b6d4;
+  --color-gold: #f59e0b;
+  --color-surface: #f8fafc;
+  --color-ink: #0f172a;
+  --color-ink-2: #334155;
+  --color-ink-3: #64748b;
+  --color-ink-4: #94a3b8;
+
+  --shadow-premium-lg: 0 12px 48px rgba(26, 86, 219, 0.12);
+  --shadow-premium-xl: 0 24px 80px rgba(26, 86, 219, 0.18);
+
+  --animate-fade-up: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-spin-slow: spin-slow 3s linear infinite;
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-bounce-slow: bounce 3s ease-in-out infinite;
+  --animate-fadeIn: fadeIn 0.3s ease-out both;
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+
+    100% {
+      background-position: 200% center;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  body {
+    @apply antialiased text-ink bg-white;
+    font-family: var(--font-body);
+  }
+}
+
+@layer components {
+  .shimmer-btn {
+    background: linear-gradient(90deg, #1a56db 0%, #3b82f6 40%, #06b6d4 60%, #1a56db 100%);
+    background-size: 200% auto;
+    @apply animate-shimmer;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand to-accent font-extrabold;
+  }
+
+  .noise-bg::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none z-0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full border-2 border-slate-100 hover:bg-slate-400;
+}
+
+/* Better Focus Rings */
+:focus-visible {
+  @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-white;
 }
