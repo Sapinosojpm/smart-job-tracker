@@ -15,6 +15,9 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
   const [timeLeft, setTimeLeft] = useState('');
   const [showPlanModal, setShowPlanModal] = useState(false);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+
   // Countdown logic
   useEffect(() => {
     if (!limitData) return;
@@ -39,11 +42,18 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
     return () => clearInterval(timer);
   }, [limitData]);
 
-  const handleScrape = async () => {
+  const handleScrape = async (shouldClear: boolean = false) => {
+    setShowConfirmModal(false);
     setState('loading');
-    const toastId = toast.loading('Scraping job boards...', { position: "top-right" });
+    const toastId = toast.loading(shouldClear ? 'Clearing and scraping...' : 'Scraping job boards...', { position: "top-right" });
 
     try {
+      if (shouldClear) {
+        setIsClearing(true);
+        await fetch('/api/jobs/clear', { method: 'DELETE' });
+        setIsClearing(false);
+      }
+
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,6 +88,8 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
         autoClose: 5000,
       });
       setTimeout(() => setState('idle'), 5000);
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -91,13 +103,56 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
   return (
     <>
       <button
-        onClick={handleScrape}
+        onClick={() => setShowConfirmModal(true)}
         disabled={state === 'loading'}
         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white transition-all duration-200 active:scale-95 shadow-lg ${config.bg} ${state === 'loading' ? 'opacity-85 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}
       >
         {config.icon}
         {config.label}
       </button>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 animate-in fade-in duration-300">
+           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowConfirmModal(false)} />
+           <div className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-10 text-center">
+                 <div className="w-20 h-20 rounded-[32px] bg-blue-50 flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-xl shadow-blue-600/10">
+                    <Zap size={40} className="text-blue-600 fill-blue-600/10" />
+                 </div>
+                 <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3">Fresh start?</h3>
+                 <p className="text-slate-500 text-[13px] font-medium leading-relaxed mb-10 px-4">
+                    Do you want to clear your current board before scraping new jobs, or just add them to your existing list?
+                 </p>
+
+                 <div className="space-y-3">
+                    <button 
+                      onClick={() => handleScrape(true)}
+                      className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                    >
+                       <RefreshCw size={18} />
+                       Clear & Scrape New
+                    </button>
+                    <button 
+                      onClick={() => handleScrape(false)}
+                      className="w-full py-4 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                    >
+                       Keep & Add New
+                    </button>
+                    <button 
+                      onClick={() => setShowConfirmModal(false)}
+                      className="w-full py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                    >
+                       Cancel
+                    </button>
+                 </div>
+              </div>
+              <div className="bg-slate-50 py-4 px-6 text-center border-t border-slate-100">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIP: Clear board for better accuracy</p>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Limit Modal */}
       {limitData && (

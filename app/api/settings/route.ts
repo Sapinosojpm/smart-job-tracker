@@ -34,7 +34,13 @@ export async function POST(request: Request) {
       plan 
     } = body;
     const currentSettings = await prisma.settings.findUnique({ where: { userId: user.id } });
-    const userPlan = plan || currentSettings?.plan || 'FREE';
+    
+    // Security: Only allow keeping the same plan or downgrading to FREE
+    // Upgrading must happen through payment webhooks
+    let userPlan = currentSettings?.plan || 'FREE';
+    if (plan === 'FREE') {
+      userPlan = 'FREE';
+    }
     let finalKeywords = keywordFilters || [];
     if (userPlan === 'FREE' && finalKeywords.length > 1) finalKeywords = [finalKeywords[0]];
     const settings = await prisma.settings.upsert({

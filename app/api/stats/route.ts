@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     // Format sources to match UI expectations
     const sources = sourcesData.map(item => ({
-      id: item.source,
+      source: item.source,
       count: item._count._all
     }));
 

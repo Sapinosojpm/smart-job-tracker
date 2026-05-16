@@ -100,3 +100,13 @@ model ScraperLog {
   error          String?
   source         String?
 }
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  userId    String?  // Optional, if logged in
+  name      String
+  role      String?
+  content   String
+  rating    Int      @default(5)
+  createdAt DateTime @default(now())
+}

@@ -15,6 +15,8 @@ import {
   ArrowUpRight,
   Settings as SettingsIcon,
   Zap,
+  Download,
+  Briefcase,
 } from 'lucide-react';
 import ScrapeButton from '@/components/ScrapeButton';
 import ApplyModal from '@/components/ApplyModal';
@@ -49,6 +51,7 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'TEAM'>('FREE');
+  const [settings, setSettings] = useState<any>(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
 
   // Modals State
@@ -75,6 +78,7 @@ export default function JobsPage() {
       const settingsData = await settingsRes.json();
       if (settingsData.success) {
         setUserPlan(settingsData.data.plan || 'FREE');
+        setSettings(settingsData.data);
       }
     } catch (err) {
       setError('Failed to fetch jobs. Check your connection.');
@@ -129,113 +133,103 @@ export default function JobsPage() {
 
   return (
     <div className="animate-in">
-      {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-6">
+      {/* --- MINIMALIST HEADER --- */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-100 text-[10px] font-semibold text-blue-800 uppercase tracking-wide">
-              Live feed
-            </div>
-            <span className="text-slate-300">·</span>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-              suppressHydrationWarning
-            >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Live Board</span>
+            <span className="text-slate-300 mx-1">/</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest" suppressHydrationWarning>
               Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-2 flex items-center gap-3">
-            <span className="gradient-text">Job board</span>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${
-              userPlan === 'TEAM' ? 'bg-indigo-50 border-indigo-200 text-indigo-600' :
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-black tracking-tight text-slate-900">Job Board</h1>
+            <span className={`text-[10px] px-2 py-0.5 rounded-lg border font-black uppercase tracking-widest ${
+              userPlan === 'TEAM' ? 'bg-purple-50 border-purple-100 text-purple-600' :
               userPlan === 'PRO' ? 'bg-amber-50 border-amber-200 text-amber-600' :
               'bg-slate-100 border-slate-200 text-slate-500'
             }`}>
-              {userPlan}
+              {userPlan === 'TEAM' ? 'ELITE' : userPlan}
             </span>
-          </h1>
-          <p className="text-slate-600 max-w-xl text-sm md:text-base leading-relaxed">
-            Manage your search targets and view opportunities in real-time.
-          </p>
+          </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          {userPlan === 'FREE' && (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Main Action Group */}
+          <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
+            <ScrapeButton onSuccess={() => fetchJobs()} />
+            <div className="w-px h-6 bg-slate-200 mx-1" />
             <button
-              onClick={() => setShowPlanModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-100 bg-amber-50 text-amber-600 font-bold text-sm hover:bg-amber-100 transition-all shadow-sm active:scale-95 animate-pulse"
+              onClick={() => {
+                setIsRefreshing(true);
+                fetchJobs().then(() => setIsRefreshing(false));
+              }}
+              className="p-2.5 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+              title="Refresh Board"
             >
-              <Zap size={18} fill="currentColor" />
-              Upgrade to PRO
+              <RefreshCw size={20} className={isRefreshing ? 'animate-spin text-blue-600' : ''} />
             </button>
-          )}
+          </div>
 
-          <button
-            onClick={() => window.open('/api/jobs/export', '_blank')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-100 bg-blue-50/50 text-blue-600 font-semibold text-sm hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm active:scale-95"
-          >
-            <ArrowUpRight size={18} />
-            Download CSV
-          </button>
-
-          <button
-            onClick={() => setShowClearModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-100 bg-red-50/50 text-red-600 font-semibold text-sm hover:bg-red-50 hover:border-red-200 transition-all shadow-sm active:scale-95"
-          >
-            <Trash2 size={18} />
-            Clear Board
-          </button>
-
-          <button
-            onClick={() => setShowConfigModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-sm active:scale-95"
-          >
-            <SettingsIcon size={18} className="text-slate-400" />
-            Configure Scraper
-          </button>
-          
-          <ScrapeButton onSuccess={() => fetchJobs()} />
-          
-          <button
-            onClick={() => {
-              setIsRefreshing(true);
-              fetchJobs().then(() => setIsRefreshing(false));
-            }}
-            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-blue-200 hover:bg-blue-50/50 transition-all active:scale-[0.98]"
-            title="Refresh list"
-            type="button"
-          >
-            <RefreshCw size={20} className={isRefreshing ? 'animate-spin text-blue-600' : ''} />
-          </button>
+          {/* Secondary Actions */}
+          <div className="flex items-center gap-1.5 ml-2">
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className="p-3 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              title="Settings"
+            >
+              <SettingsIcon size={20} />
+            </button>
+            <button
+              onClick={() => window.open('/api/jobs/export', '_blank')}
+              className="p-3 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+              title="Download CSV"
+            >
+              <Download size={20} />
+            </button>
+            <button
+              onClick={() => setShowClearModal(true)}
+              className="p-3 rounded-2xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+              title="Clear Board"
+            >
+              <Trash2 size={20} />
+            </button>
+            {userPlan === 'FREE' && (
+              <button
+                onClick={() => setShowPlanModal(true)}
+                className="ml-2 px-5 py-2.5 rounded-2xl bg-amber-500 text-white font-bold text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+              >
+                Upgrade
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Filter Section */}
-      <div className="glass mb-8 flex flex-col gap-2 rounded-2xl border border-slate-200/90 p-2 shadow-sm md:flex-row md:items-center">
-        <div className="relative flex-1 w-full group">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors"
-            size={18}
-          />
+      {/* --- MODERN SEARCH & FILTERS --- */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-10 w-full">
+        <div className="relative flex-grow group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
           <input
             type="text"
-            placeholder="Quick search results..."
+            placeholder="Search jobs, companies, or keywords..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-transparent bg-white/80 py-3.5 pl-12 pr-4 text-sm font-medium text-slate-900 shadow-inner placeholder:text-slate-400 focus:border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full h-14 pl-14 pr-6 rounded-[20px] bg-white border border-slate-200 shadow-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-slate-900"
           />
         </div>
         
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-auto border border-slate-200/80">
+        <div className="flex items-center p-1.5 bg-slate-100/80 backdrop-blur-sm rounded-[20px] border border-slate-200 shrink-0">
           {['all', 'new', 'applied'].map((f) => (
             <button
               key={f}
-              type="button"
               onClick={() => setFilter(f)}
-              className={`px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wide transition-all whitespace-nowrap flex-1 md:flex-none ${
+              className={`px-8 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
                 filter === f
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-blue-600 shadow-sm border border-slate-200'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               {f}
@@ -247,8 +241,29 @@ export default function JobsPage() {
       {/* Grid Content */}
       {loading && !isRefreshing ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="skeleton h-64 rounded-3xl" />
+          {[...Array(9)].map((_, i) => (
+            <div key={i} className="bg-white border border-slate-100 rounded-[32px] p-6 space-y-6 shadow-sm overflow-hidden relative">
+               {/* Shimmer Effect */}
+               <div className="absolute inset-0 -translate-x-full animate-[shimmer-slide_2s_infinite] bg-gradient-to-r from-transparent via-slate-50/50 to-transparent" />
+               
+               <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-100 shrink-0" />
+                  <div className="flex-1 space-y-3">
+                     <div className="h-5 bg-slate-100 rounded-lg w-3/4" />
+                     <div className="h-4 bg-slate-50 rounded-lg w-1/2" />
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50/50 rounded-2xl">
+                  <div className="h-8 bg-white/80 rounded-xl" />
+                  <div className="h-8 bg-white/80 rounded-xl" />
+               </div>
+
+               <div className="flex justify-between items-center pt-2">
+                  <div className="h-4 bg-slate-100 rounded-md w-24" />
+                  <div className="h-9 bg-slate-200 rounded-xl w-24" />
+               </div>
+            </div>
           ))}
         </div>
       ) : error ? (
@@ -267,12 +282,35 @@ export default function JobsPage() {
           </button>
         </div>
       ) : jobs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center glass rounded-2xl border border-dashed border-slate-300 bg-slate-50/30">
-          <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-5">
-            <Layers size={28} className="text-slate-400" />
+        <div className="flex flex-col items-center justify-center min-h-[500px] text-center bg-white border border-dashed border-slate-200 rounded-[40px] p-12 transition-all animate-in fade-in zoom-in-95 duration-500">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-blue-100 blur-3xl opacity-30 rounded-full animate-pulse" />
+            <div className="relative w-24 h-24 rounded-[32px] bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center shadow-xl shadow-blue-600/5">
+              <Briefcase size={40} className="text-blue-600" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-lg flex items-center justify-center">
+              <Zap size={20} className="text-amber-500 fill-amber-500" />
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">No jobs match</h3>
-          <p className="text-slate-600 text-sm max-w-md">Change filters or run a scrape to populate the board.</p>
+          
+          <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Board is currently empty</h3>
+          <p className="text-slate-500 text-base max-w-sm leading-relaxed mb-10">
+            Start your hunt by running a fresh scrape. We'll find the best {settings?.scraperQuery || 'React'} jobs across the web for you.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-95"
+            >
+              <SettingsIcon size={18} />
+              Configure Search
+            </button>
+          </div>
+          
+          <div className="mt-12 pt-8 border-t border-slate-100 w-full max-w-xs">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Automated Job Tracking System</p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">

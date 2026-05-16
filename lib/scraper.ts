@@ -317,7 +317,9 @@ async function insertUniqueJobs(userId: string, jobs: ScrapedJob[]): Promise<{
 export async function runScraper(userId: string, query?: string): Promise<ScrapeResult> {
   const settings = await getAppSettings(userId);
 
-  const searchQuery = query || settings.scraperQuery || 'react developer';
+  const searchQuery = (typeof query === 'string' && query.trim().length > 0) 
+    ? query 
+    : (settings.scraperQuery || 'react developer');
   const keywords = settings.keywordFilters || [];
 
   const log = await prisma.scraperLog.create({
@@ -382,10 +384,34 @@ export async function runScraper(userId: string, query?: string): Promise<Scrape
       ...linkedInJobs,
       ...remoteOKJobs
     ];
-    const filteredJobs = allJobs.filter((job) => matchesKeywords(job, keywords));
+
+    // --- NEW: Strict Query Filtering ---
+    const queryKeywords = searchQuery.toLowerCase()
+      .split(/[\s,]+/)
+      .filter(k => k.length > 2);
     
+    console.log(`[Scraper] Filtering ${allJobs.length} jobs with keywords:`, queryKeywords);
+
+    const matchedJobs = allJobs.filter(job => {
+      const title = job.title.toLowerCase();
+      const company = job.company.toLowerCase();
+      const searchable = `${title} ${company}`.toLowerCase();
+      
+      // Strict: At least one keyword must be in the TITLE (not just anywhere)
+      const matchesQuery = queryKeywords.length === 0 || queryKeywords.some(kw => title.includes(kw));
+      const matchesUserKeywords = matchesKeywords(job, keywords);
+      
+      if (!matchesQuery) {
+        // console.log(`[Scraper] Skipping unrelated job: ${job.title}`);
+      }
+      
+      return matchesQuery && matchesUserKeywords;
+    });
+
+    console.log(`[Scraper] Filtered down to ${matchedJobs.length} matching jobs.`);
+
     const uniqueLinks = new Set<string>();
-    const deduplicatedJobs = filteredJobs.filter((job) => {
+    const deduplicatedJobs = matchedJobs.filter((job) => {
       if (!job.link || uniqueLinks.has(job.link)) return false;
       uniqueLinks.add(job.link);
       return true;

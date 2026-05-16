@@ -15,8 +15,10 @@ import {
   Eye,
   EyeOff,
   HelpCircle,
+  Zap
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import CancelSubscriptionModal from '@/components/CancelSubscriptionModal';
 
 interface ISettings {
   telegramBotToken: string;
@@ -28,6 +30,7 @@ interface ISettings {
   scraperBaseUrl: string;
   scraperQuery: string;
   scraperLocation: string;
+  plan: 'FREE' | 'PRO' | 'TEAM';
 }
 
 export default function SettingsPage() {
@@ -44,10 +47,13 @@ export default function SettingsPage() {
     scraperBaseUrl: '',
     scraperQuery: '',
     scraperLocation: '',
+    plan: 'FREE',
   });
 
   const [showEmailPass, setShowEmailPass] = useState(false);
   const [showBotToken, setShowBotToken] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -108,6 +114,27 @@ export default function SettingsPage() {
       setError('Failed to save settings.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCanceling(true);
+    try {
+      const res = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setSettings((prev) => ({ ...prev, plan: 'FREE' }));
+        setShowCancelModal(false);
+      } else {
+        throw new Error(data.error || 'Failed to cancel subscription');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setCanceling(false);
     }
   };
 
@@ -330,8 +357,48 @@ export default function SettingsPage() {
               • Telegram <strong>Chat IDs</strong> usually start with a minus (-) sign for groups.
             </p>
           </section>
+
+          {/* Plan Section */}
+          <section className="glass p-6 rounded-2xl border border-slate-100">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap size={16} className="text-blue-600" />
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Current Plan</h4>
+            </div>
+            
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-xs font-bold text-slate-600">Active Tier:</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-lg border font-black uppercase tracking-widest ${
+                  settings.plan === 'TEAM' ? 'bg-purple-50 border-purple-100 text-purple-600' :
+                  settings.plan === 'PRO' ? 'bg-amber-50 border-amber-200 text-amber-600' :
+                  'bg-slate-100 border-slate-200 text-slate-500'
+                }`}>
+                  {settings.plan === 'TEAM' ? 'ELITE' : settings.plan}
+                </span>
+              </div>
+
+              {settings.plan !== 'FREE' && (
+                <div className="pt-4 border-t border-slate-100">
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="w-full py-2.5 rounded-xl border border-red-100 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-50 transition-all"
+                  >
+                    Cancel Subscription
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </div>
+
+      <CancelSubscriptionModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelSubscription}
+        loading={canceling}
+        planName={settings.plan === 'TEAM' ? 'Elite' : 'Pro'}
+      />
     </div>
   );
 }

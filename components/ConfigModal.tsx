@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import {
   X,
@@ -12,12 +12,14 @@ import {
   Globe,
   Loader2,
   Settings as SettingsIcon,
+  ShieldAlert,
   Plus,
-  Zap,
   Target,
-  Send
+  Send,
+  Zap
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import CancelSubscriptionModal from './CancelSubscriptionModal';
 
 interface ISettings {
   scraperQuery: string;
@@ -55,6 +57,8 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -128,6 +132,28 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
     }
   };
 
+  const handleCancelSubscription = async () => {
+    setCanceling(true);
+    try {
+      const res = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setSettings({ ...settings, plan: 'FREE' });
+        setShowCancelModal(false);
+        onSuccess();
+      } else {
+        throw new Error(data.error || 'Failed to cancel subscription');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setCanceling(false);
+    }
+  };
+
   const addKeyword = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && newKeyword.trim()) {
       if (settings.plan === 'FREE' && settings.keywordFilters.length >= 1) {
@@ -184,11 +210,11 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
               <div className="flex items-center gap-2">
                 <h2 className="text-2xl font-bold tracking-tight">Scraper Configuration</h2>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${
-                  settings.plan === 'TEAM' ? 'bg-indigo-500/20 border-white/20 text-white' :
+                  settings.plan === 'TEAM' ? 'bg-purple-500/30 border-white/30 text-white' :
                   settings.plan === 'PRO' ? 'bg-amber-500/20 border-white/20 text-white' :
                   'bg-white/10 border-white/10 text-blue-100'
                 }`}>
-                  {settings.plan} PLAN
+                  {settings.plan === 'TEAM' ? 'ELITE' : settings.plan} PLAN
                 </span>
               </div>
               <p className="text-blue-100 text-sm font-medium mt-1">
@@ -335,6 +361,33 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                   Create a bot via @BotFather to get a token and Chat ID.
                 </p>
               </div>
+
+              {/* Plan Management */}
+              {settings.plan !== 'FREE' && (
+                <div className="pt-6 border-t border-slate-100">
+                  <label className="text-[11px] font-black text-red-600 uppercase tracking-[0.2em] flex items-center gap-2 px-1 mb-4">
+                    <ShieldAlert size={14} />
+                    Plan Management
+                  </label>
+                  
+                  <div className="bg-red-50/50 border border-red-100 rounded-2xl p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">Cancel Subscription</h4>
+                        <p className="text-[11px] text-slate-500 font-medium mt-1">
+                          You will lose access to {settings.plan === 'TEAM' ? 'Elite' : 'Pro'} features immediately.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowCancelModal(true)}
+                        className="px-4 py-2 rounded-xl border border-red-200 text-red-600 text-[11px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -361,6 +414,14 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
           </button>
         </div>
       </div>
+
+      <CancelSubscriptionModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelSubscription}
+        loading={canceling}
+        planName={settings.plan === 'TEAM' ? 'Elite' : 'Pro'}
+      />
     </div>
   );
 }

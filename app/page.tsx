@@ -6,10 +6,12 @@ import {
   Zap, Search, Bell, ChevronRight, ArrowRight, Target,
   Sparkles, Globe, Mail, Lock, Loader2, X, CheckCircle2,
   TrendingUp, Users, Briefcase, Star, Play, Shield,
-  Clock, BarChart3, Filter, Send, Menu as MenuIcon
+  Clock, BarChart3, Filter, Send, Menu as MenuIcon, Check,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'react-toastify';
+import TestimonialModal from '@/components/TestimonialModal';
 
 /* ─── Sub-components ─────────────────────────────────────────────── */
 
@@ -110,6 +112,8 @@ function NavBar({ onSignIn, onGetStarted }: { onSignIn: () => void; onGetStarted
 }
 
 function HeroSection({ stats, onGetStarted }: { stats: any; onGetStarted: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white pt-[72px]">
       {/* Background blobs */}
@@ -177,7 +181,7 @@ function HeroSection({ stats, onGetStarted }: { stats: any; onGetStarted: () => 
                 'col-span-2 md:col-span-1'
               }`}>
                 <div className="font-display text-[1.6rem] md:text-[2rem] font-extrabold text-ink leading-none">
-                  {Intl.NumberFormat('en-US', { notation: 'compact' }).format(s.value || 0)}{s.suffix}
+                  {mounted ? Intl.NumberFormat('en-US', { notation: 'compact' }).format(s.value || 0) : '0'}{s.suffix}
                 </div>
                 <div className="text-[10px] md:text-[11px] font-bold text-ink-4 tracking-wider uppercase mt-2">{s.label}</div>
               </div>
@@ -189,9 +193,21 @@ function HeroSection({ stats, onGetStarted }: { stats: any; onGetStarted: () => 
   );
 }
 
+const PLATFORMS = ['Indeed PH', 'JobStreet PH', 'OnlineJobs.ph', 'LinkedIn', 'RemoteOK (Intl)'];
+
 function LogoMarquee() {
-  const platforms = ['JobStreet', 'Indeed', 'OnlineJobs.ph', 'Kalibrr', 'LinkedIn', 'Glassdoor', 'Workable', 'Remotive'];
-  const doubled = [...platforms, ...platforms, ...platforms, ...platforms];
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const doubled = [...PLATFORMS, ...PLATFORMS, ...PLATFORMS, ...PLATFORMS];
+
+  if (!mounted) {
+    return <section className="bg-ink py-7 h-[84px]" />; // Placeholder during SSR
+  }
+
   return (
     <section className="bg-ink py-7 overflow-hidden relative">
       <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-ink to-transparent z-10 pointer-events-none" />
@@ -200,7 +216,7 @@ function LogoMarquee() {
       <div className="overflow-hidden">
         <div className="flex gap-16 items-center animate-marquee w-max">
           {doubled.map((p, i) => (
-            <div key={i} className="flex items-center gap-2.5 whitespace-nowrap">
+            <div key={`${p}-${i}`} className="flex items-center gap-2.5 whitespace-nowrap">
               <div className="w-2 h-2 rounded-full bg-accent" />
               <span className="font-display text-base font-bold text-white/70">{p}</span>
             </div>
@@ -216,7 +232,7 @@ function FeaturesSection() {
     {
       icon: <Search size={24} />, color: 'text-brand', bg: 'bg-brand/10',
       title: 'Automated Daily Scraping',
-      desc: 'Our bots run every 4 hours across 8+ job platforms so fresh listings land in your dashboard before anyone else.',
+      desc: 'Our bots run every 4 hours across 5 top job platforms so fresh listings land in your dashboard before anyone else.',
       tag: 'Core'
     },
     {
@@ -318,11 +334,27 @@ function HowItWorksSection() {
 }
 
 function TestimonialsSection() {
-  const reviews = [
+  const [userComments, setUserComments] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchComments = async () => {
+    try {
+      const res = await fetch('/api/testimonials');
+      const data = await res.json();
+      if (data.success) setUserComments(data.data);
+    } catch (e) { }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const staticReviews = [
     { name: 'Maria Santos', role: 'Data Analyst', avatar: 'MS', quote: 'I landed 3 interviews in my first week. The Telegram alerts are insanely fast — I applied before it showed up in regular search.', stars: 5 },
     { name: 'James Reyes', role: 'Frontend Developer', avatar: 'JR', quote: 'Saved me hours of manual searching every day. The smart filter for remote React roles is incredibly accurate.', stars: 5 },
     { name: 'Anna Lim', role: 'Marketing Manager', avatar: 'AL', quote: 'I was skeptical but the scam detection alone is worth it. No more wasting time on suspicious listings.', stars: 5 },
   ];
+
   return (
     <section className="py-20 md:py-32 px-6 bg-white">
       <div className="max-w-[1200px] mx-auto">
@@ -333,8 +365,9 @@ function TestimonialsSection() {
           <h2 className="font-display text-[2rem] md:text-[2.5rem] font-extrabold text-ink tracking-tight mb-4">Loved by job seekers</h2>
           <p className="text-ink-3 text-lg font-medium">Real stories from people who landed their dream roles.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map(r => (
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {staticReviews.map(r => (
             <div key={r.name} className="p-8 rounded-[24px] border border-border bg-surface hover:shadow-premium-lg transition-shadow duration-300">
               <div className="flex gap-1 mb-5">
                 {[...Array(r.stars)].map((_, i) => <Star key={i} size={16} className="fill-gold text-gold" />)}
@@ -349,7 +382,41 @@ function TestimonialsSection() {
               </div>
             </div>
           ))}
+
+          {userComments.map(r => (
+            <div key={r.id} className="p-8 rounded-[24px] border border-brand/10 bg-brand/[0.02] hover:shadow-premium-lg transition-shadow duration-300">
+              <div className="flex gap-1 mb-5">
+                {[...Array(r.rating)].map((_, i) => <Star key={i} size={16} className="fill-gold text-gold" />)}
+              </div>
+              <p className="text-[15px] text-ink-2 leading-relaxed mb-6 font-medium italic">"{r.content}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center font-display font-extrabold text-sm text-brand">{r.name.charAt(0)}</div>
+                <div>
+                  <div className="font-bold text-sm text-ink">{r.name}</div>
+                  <div className="text-[13px] text-ink-3 font-medium">{r.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* Modal Trigger Button */}
+        <div className="flex flex-col items-center">
+           <button 
+             onClick={() => setIsModalOpen(true)}
+             className="px-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-3 shadow-xl active:scale-95 group"
+           >
+              <MessageSquarePlus size={20} className="group-hover:scale-110 transition-transform" />
+              Share Your Success Story
+           </button>
+           <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Takes less than 1 minute</p>
+        </div>
+
+        <TestimonialModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onSuccess={fetchComments} 
+        />
       </div>
     </section>
   );
@@ -358,57 +425,98 @@ function TestimonialsSection() {
 function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
   const plans = [
     {
-      name: 'Free', price: '₱0', period: '/forever',
+      name: 'Free Trial', price: '₱0', period: '', icon: <CheckCircle2 className="text-emerald-500" />,
+      desc: 'Start applying in minutes. Free forever for basic use.',
       features: ['50 jobs/day scrape', '1 job alert filter', 'Email alerts', 'Basic dashboard'],
-      cta: 'Start Free', popular: false
+      cta: 'Start Free Now', color: 'emerald', popular: false
     },
     {
-      name: 'Pro', price: '₱299', period: '/month',
-      features: ['Unlimited scraping', '10 smart filters', 'Email + Telegram alerts', 'Advanced dashboard', 'Salary insights', 'Priority scam detection'],
-      cta: 'Start Pro Trial', popular: true
+      name: 'Basic Pro', price: '₱299', period: '/month', icon: <Star className="text-blue-500" fill="currentColor" />,
+      desc: 'For freelancers who want to apply faster.',
+      features: ['Unlimited scraping', '10 smart filters', 'Telegram alerts', 'Salary insights', 'Priority detection'],
+      cta: 'Start Applying Now', color: 'blue', popular: true, badge: 'Most Popular'
     },
     {
-      name: 'Team', price: '₱799', period: '/month',
-      features: ['Everything in Pro', 'Up to 5 team members', 'Shared filter templates', 'CSV export', 'Dedicated support'],
-      cta: 'Contact Us', popular: false
+      name: 'Elite Plan', price: '₱999', period: '/month', icon: <Zap className="text-indigo-600" fill="currentColor" />,
+      desc: 'For elite individuals who want absolute speed.',
+      features: ['Everything in Pro', 'AI Resume Builder', 'Cover Letter Generator', 'Unlimited exports', 'Priority Support'],
+      cta: 'Get Elite Access', color: 'indigo', popular: false
     },
   ];
+
   return (
-    <section id="pricing" className="py-20 md:py-32 px-6 bg-surface">
-      <div className="max-w-[1100px] mx-auto">
-        <div className="text-center mb-16">
-          <div className="inline-block px-3.5 py-1 rounded-full bg-brand-light text-[12px] font-bold text-brand tracking-widest uppercase mb-4">Pricing</div>
-          <h2 className="font-display text-[2rem] md:text-[2.5rem] font-extrabold text-ink tracking-tight mb-4">Simple, transparent pricing</h2>
-          <p className="text-ink-3 text-lg font-medium">Start free. Upgrade when you're ready.</p>
+    <section id="pricing" className="py-20 md:py-32 px-6 bg-white">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-6">Start for free. Get results fast.</h2>
+          <p className="text-slate-500 text-lg font-medium max-w-2xl mx-auto">
+            Try our smart filtering risk-free. Apply faster, save time, and upgrade anytime as your career grows.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
           {plans.map(p => (
-            <div key={p.name} className={`rounded-[32px] p-8 md:p-10 relative transition-all duration-300 ${p.popular ? 'bg-brand text-white border-2 border-brand shadow-premium-xl ring-4 ring-brand/10' : 'bg-white border border-border shadow-sm'
-              }`}>
-              {p.popular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gold text-white text-[11px] font-extrabold tracking-widest uppercase px-4 py-1.5 rounded-full">Most Popular</div>}
-              <div className={`text-[13px] font-bold mb-3 tracking-widest uppercase ${p.popular ? 'text-white/70' : 'text-ink-3'}`}>{p.name}</div>
-              <div className="flex items-baseline gap-1.5 mb-6">
-                <span className="font-display text-4xl font-extrabold tracking-tight">{p.price}</span>
-                <span className={`text-sm ${p.popular ? 'text-white/60' : 'text-ink-4'}`}>{p.period}</span>
+            <div key={p.name} className={`relative flex flex-col rounded-[40px] p-8 md:p-10 border-2 transition-all duration-300 ${
+              p.popular ? 'border-blue-600 shadow-2xl shadow-blue-900/10 scale-105 z-10' : 'border-slate-100 hover:border-slate-200'
+            }`}>
+              {p.popular && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-blue-600/20">
+                  {p.badge}
+                </div>
+              )}
+
+              <div className="mb-8">
+                <div className={`w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-6`}>
+                  {p.icon}
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">{p.name}</h3>
+                <p className="text-slate-500 text-xs font-bold leading-relaxed">{p.desc}</p>
               </div>
-              <div className={`h-px w-full mb-8 ${p.popular ? 'bg-white/10' : 'bg-border'}`} />
-              <ul className="space-y-4 mb-10">
+
+              <div className="flex items-baseline gap-1 mb-8">
+                <span className="text-5xl font-black text-slate-900 tracking-tighter">{p.price}</span>
+                <span className="text-slate-400 text-sm font-bold">{p.period}</span>
+              </div>
+
+              <div className="h-px w-full bg-slate-100 mb-8" />
+
+              <ul className="space-y-4 mb-12 flex-1">
                 {p.features.map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm font-medium">
-                    <CheckCircle2 size={16} className={`shrink-0 ${p.popular ? 'text-white/80' : 'text-success'}`} />
-                    <span className={p.popular ? 'text-white/90' : 'text-ink-2'}>{f}</span>
+                  <li key={f} className="flex items-start gap-3 text-sm font-semibold">
+                    <Check size={16} className={`shrink-0 mt-0.5 ${
+                      p.color === 'emerald' ? 'text-emerald-500' : p.color === 'blue' ? 'text-blue-500' : 'text-indigo-500'
+                    }`} />
+                    <span className="text-slate-600">{f}</span>
                   </li>
                 ))}
               </ul>
+
               <button
                 onClick={onGetStarted}
-                className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${p.popular ? 'bg-white text-brand hover:bg-brand-light' : 'border-2 border-border text-ink-2 hover:border-brand hover:text-brand'
-                  }`}
+                className={`w-full py-4 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all ${
+                  p.color === 'emerald' ? 'bg-emerald-500 text-white hover:bg-emerald-600' :
+                  p.color === 'blue' ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/20' :
+                  'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-600/20'
+                } active:scale-95`}
               >
                 {p.cta}
               </button>
             </div>
           ))}
+        </div>
+
+        <div className="mt-16 flex flex-col items-center gap-4 text-center">
+          <div className="flex flex-wrap justify-center gap-8">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <CheckCircle2 size={16} className="text-blue-500" />
+              No credit card required
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <CheckCircle2 size={16} className="text-blue-500" />
+              One-time payment options
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 font-medium">Already landed a job? Just don't renew — no hidden charges.</p>
         </div>
       </div>
     </section>
@@ -583,6 +691,15 @@ function LandingContent() {
   const [defaultSignUp, setDefaultSignUp] = useState(false);
   const [stats, setStats] = useState({ totalJobs: 0, activeUsers: 0, successMatches: 0 });
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.href = '/dashboard';
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('login') === 'true') { setModalOpen(true); setDefaultSignUp(false); }

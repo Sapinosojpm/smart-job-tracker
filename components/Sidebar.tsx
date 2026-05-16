@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,7 +10,9 @@ import {
   Settings,
   Zap,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  FileText,
+  Activity
 } from 'lucide-react';
 
 const navItems = [
@@ -32,9 +35,15 @@ const navItems = [
     description: 'Track progress',
   },
   {
+    href: '/documents',
+    label: 'Documents',
+    icon: FileText,
+    description: 'Resume & Letters',
+  },
+  {
     href: '/logs',
     label: 'Scraper Logs',
-    icon: ScrollText,
+    icon: Activity,
     description: 'Run history',
   },
   {
@@ -47,9 +56,14 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-[4px_0_24px_-12px_rgba(15,23,42,0.12)]">
+    <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-[4px_0_24px_-12px_rgba(15,23,42,0.12)] print:hidden">
       <div className="border-b border-slate-100 px-6 py-6">
         <Link href="/dashboard" className="flex items-center gap-3 group">
           <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-600/10 transition-all duration-300 group-hover:scale-[1.08] border border-slate-100 bg-white shrink-0">
@@ -72,9 +86,10 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
         <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Menu</p>
         {navItems.map((item) => {
-          const isActive =
+          const isActive = mounted && (
             pathname === item.href ||
-            (item.href !== '/jobs' && pathname.startsWith(item.href));
+            (item.href !== '/jobs' && pathname.startsWith(item.href))
+          );
           const Icon = item.icon;
 
           return (

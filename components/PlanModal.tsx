@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Check, Zap, Shield, Users, Loader2, ArrowRight } from 'lucide-react';
+import { X, Check, Loader2, ArrowRight, Star, Zap, Rocket, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface PlanModalProps {
@@ -10,12 +10,13 @@ interface PlanModalProps {
 }
 
 export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
-  const [loadingPlan, setLoadingPlan] = useState<'PRO' | 'TEAM' | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<'FREE' | 'PRO' | 'ELITE' | null>(null);
 
   if (!isOpen) return null;
 
-  const handleUpgrade = async (plan: 'PRO' | 'TEAM') => {
-    setLoadingPlan(plan);
+  const handleUpgrade = async (plan: string) => {
+    if (plan === 'FREE') { onClose(); return; }
+    setLoadingPlan(plan as any);
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -23,11 +24,8 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
         body: JSON.stringify({ plan }),
       });
       const data = await res.json();
-      if (data.success && data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Failed to start checkout');
-      }
+      if (data.success && data.url) { window.location.href = data.url; }
+      else { throw new Error(data.error || 'Failed to start checkout'); }
     } catch (err: any) {
       toast.error(err.message);
       setLoadingPlan(null);
@@ -36,120 +34,91 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
 
   const plans = [
     {
-      id: 'PRO',
-      name: 'Pro Plan',
-      price: '₱299',
-      period: '/mo',
-      desc: 'Ideal for serious job seekers.',
-      icon: <Zap className="text-amber-500" />,
-      color: 'blue',
-      features: [
-        'Unlimited daily scraping',
-        'Up to 10 smart filters',
-        'Telegram & Email alerts',
-        'Scam detection engine',
-        'Salary analytics insights',
-      ],
+      id: 'FREE', name: 'Free', price: '₱0', period: '', icon: <Zap size={16} />,
+      features: ['50 jobs/day scrape', '1 job alert filter', 'Email alerts', 'Basic dashboard'],
+      cta: 'Current Plan', recommended: false,
     },
     {
-      id: 'TEAM',
-      name: 'Team Plan',
-      price: '₱799',
-      period: '/mo',
-      desc: 'For groups and collaborations.',
-      icon: <Users className="text-indigo-500" />,
-      color: 'indigo',
-      features: [
-        'Everything in Pro',
-        'Up to 5 team members',
-        'Shared filter templates',
-        'CSV & JSON exports',
-        'Priority support',
-      ],
+      id: 'PRO', name: 'Pro', price: '₱299', period: '/mo', icon: <Star size={16} />,
+      features: ['Unlimited scraping', '10 smart filters', 'Telegram alerts', 'Salary insights', 'Priority support'],
+      cta: 'Upgrade Now', recommended: true,
+    },
+    {
+      id: 'ELITE', name: 'Elite', price: '₱599', period: '/mo', icon: <Rocket size={16} />,
+      features: ['Everything in Pro', 'AI Resume Tailoring', 'Scam Shield Pro', 'Instant Refresh', 'Elite Insights'],
+      cta: 'Go Elite', recommended: false,
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
+    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full max-w-4xl bg-slate-50 rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
-        {/* Left Side - Info */}
-        <div className="w-full md:w-[320px] bg-white p-10 border-r border-slate-100 flex flex-col justify-between">
-          <div>
-            <button onClick={onClose} className="md:hidden absolute right-6 top-6 p-2 rounded-full bg-slate-100 text-slate-400">
-              <X size={20} />
-            </button>
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mb-8 shadow-lg shadow-blue-600/20">
-              <Shield className="text-white" size={28} />
-            </div>
-            <h2 className="text-3xl font-black text-slate-900 leading-tight mb-4">Upgrade Your Search</h2>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Unlock the full potential of our AI-powered engine and land your dream job faster.
-            </p>
-          </div>
+      <div className="relative w-full max-w-5xl bg-white rounded-[32px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col animate-in zoom-in-95 duration-300">
+        <button onClick={onClose} className="absolute right-6 top-6 p-1.5 rounded-full hover:bg-slate-50 text-slate-400 transition-colors">
+          <X size={18} />
+        </button>
 
-          <div className="mt-12 space-y-6">
-             <div className="flex items-center gap-3">
-               <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Secure Payment by PayMongo</p>
-             </div>
-          </div>
+        <div className="pt-8 pb-6 px-10 text-center">
+           <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Elevate your search.</h2>
+           <p className="text-slate-400 text-[13px] font-medium">Simple plans for individual career growth.</p>
         </div>
 
-        {/* Right Side - Plans */}
-        <div className="flex-1 p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="px-8 pb-8 grid grid-cols-1 md:grid-cols-3 gap-5">
           {plans.map((p) => (
             <div 
               key={p.id} 
-              className={`relative bg-white p-8 rounded-[32px] border-2 transition-all group ${
-                p.id === 'PRO' ? 'border-amber-100 hover:border-amber-300' : 'border-indigo-100 hover:border-indigo-300'
-              } hover:shadow-xl`}
+              className={`flex flex-col p-6 rounded-2xl border transition-all duration-300 ${
+                p.recommended ? 'border-blue-500 ring-4 ring-blue-50 shadow-lg' : 'border-slate-100 bg-white'
+              }`}
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${p.id === 'PRO' ? 'bg-amber-50' : 'bg-indigo-50'}`}>
-                  {p.icon}
+              <div className="flex justify-between items-center mb-4">
+                <div className={`p-2 rounded-lg ${p.recommended ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'}`}>
+                   {p.icon}
                 </div>
-                <div className="text-[11px] font-black text-slate-300 uppercase tracking-widest group-hover:text-slate-400 transition-colors">{p.id}</div>
+                {p.recommended && <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Popular</span>}
               </div>
 
-              <h3 className="text-xl font-extrabold text-slate-900 mb-2">{p.name}</h3>
-              <p className="text-slate-500 text-xs font-medium mb-6">{p.desc}</p>
-
-              <div className="flex items-baseline gap-1 mb-8">
-                <span className="text-4xl font-black text-slate-900 tracking-tight">{p.price}</span>
-                <span className="text-slate-400 text-sm font-bold">{p.period}</span>
+              <div className="mb-4">
+                 <h3 className="text-lg font-bold text-slate-900 leading-none mb-1">{p.name}</h3>
+                 <div className="flex items-baseline gap-0.5">
+                   <span className="text-2xl font-black text-slate-900">{p.price}</span>
+                   <span className="text-slate-400 text-[11px] font-bold">{p.period}</span>
+                 </div>
               </div>
 
-              <div className="h-px bg-slate-50 w-full mb-8" />
-
-              <ul className="space-y-4 mb-10">
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-[13px] font-semibold text-slate-600">
-                    <Check size={16} className="text-green-500 shrink-0 mt-0.5" />
+                  <li key={f} className="flex items-center gap-2 text-[12px] font-semibold text-slate-600">
+                    <Check size={14} className="text-blue-500 shrink-0" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
 
               <button
-                onClick={() => handleUpgrade(p.id as 'PRO' | 'TEAM')}
-                disabled={!!loadingPlan}
-                className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 text-sm font-black transition-all ${
-                  p.id === 'PRO' 
-                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600' 
-                    : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700'
-                } active:scale-95 disabled:opacity-50`}
+                onClick={() => handleUpgrade(p.id)}
+                disabled={!!loadingPlan || p.id === 'FREE'}
+                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 text-[12px] font-bold transition-all ${
+                  p.recommended 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200' 
+                    : p.id === 'FREE' ? 'bg-slate-50 text-slate-300' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                } disabled:opacity-80`}
               >
-                {loadingPlan === p.id ? <Loader2 size={18} className="animate-spin" /> : (
+                {loadingPlan === p.id ? <Loader2 size={16} className="animate-spin" /> : (
                   <>
-                    <span>Choose {p.name}</span>
-                    <ArrowRight size={16} />
+                    <span>{p.cta}</span>
+                    {p.id !== 'FREE' && <ArrowRight size={14} />}
                   </>
                 )}
               </button>
             </div>
           ))}
+        </div>
+
+        <div className="py-4 border-t border-slate-50 flex items-center justify-center gap-2">
+           <ShieldCheck size={14} className="text-blue-500" />
+           <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Secure Payment Gateway</span>
         </div>
       </div>
     </div>

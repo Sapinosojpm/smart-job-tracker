@@ -16,7 +16,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         <div className="fixed top-[-15%] right-[-5%] w-[45%] h-[45%] bg-blue-400/10 blur-[100px] rounded-full pointer-events-none" />
         <div className="fixed bottom-[-20%] left-[15%] w-[35%] h-[35%] bg-sky-300/15 blur-[90px] rounded-full pointer-events-none" />
 
-        <div className={`flex-1 ${!isPublicPage ? 'max-w-7xl mx-auto px-5 py-8 md:px-10 md:py-10' : ''} relative z-10`}>
+        <div className={`flex-1 ${!isPublicPage ? 'max-w-[1600px] mx-auto px-5 py-8 md:px-10 md:py-10' : ''} relative z-10 w-full`}>
           {children}
         </div>
       </main>
