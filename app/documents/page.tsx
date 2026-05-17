@@ -2,23 +2,14 @@
 
 import { useState } from 'react';
 import { 
-  FileText, 
   PenTool, 
   Download, 
   Sparkles, 
-  ChevronRight, 
-  History,
   Layout,
   Printer,
   Copy,
   Check,
   Loader2,
-  Github,
-  Linkedin,
-  Mail,
-  Phone,
-  MapPin,
-  ExternalLink,
   Plus,
   Trash2
 } from 'lucide-react';
@@ -150,17 +141,18 @@ export default function DocumentsPage() {
       // @ts-ignore
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('resume-preview');
+      if (!element) return;
       
       const opt = {
         margin:       0,
         filename:     `${resumeData.fullName.replace(/\s+/g, '_')}_Resume.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
+        image:        { type: 'jpeg' as const, quality: 0.98 },
         html2canvas:  { 
           scale: 3, // Higher scale for crisp text
           useCORS: true,
           letterRendering: true
         },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF:        { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
       };
 
       await html2pdf().set(opt).from(element).save();
