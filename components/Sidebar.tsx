@@ -69,7 +69,7 @@ export default function Sidebar() {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         
-        const adminEmails = ['sapinosojpm@gmail.com'];
+        const adminEmails = ['sapinosojpm@gmail.com', 'sapinosomille@gmail.com'];
         const envAdminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
           .split(',')
           .map(email => email.trim().toLowerCase())
@@ -77,7 +77,7 @@ export default function Sidebar() {
 
         if (user && user.email) {
           const email = user.email.toLowerCase();
-          if (email === 'sapinosojpm@gmail.com' || adminEmails.includes(email) || envAdminEmails.includes(email)) {
+          if (email === 'sapinosojpm@gmail.com' || email === 'sapinosomille@gmail.com' || adminEmails.includes(email) || envAdminEmails.includes(email)) {
             setIsAdmin(true);
           }
         }

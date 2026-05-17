@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-const ADMIN_EMAILS = ['sapinosojpm@gmail.com'];
+const ADMIN_EMAILS = ['sapinosojpm@gmail.com', 'sapinosomille@gmail.com'];
 
 async function isAdminAuthorized() {
   try {
@@ -19,6 +19,7 @@ async function isAdminAuthorized() {
     return (
       envAdminEmails.includes(email) || 
       email === 'sapinosojpm@gmail.com' || 
+      email === 'sapinosomille@gmail.com' || 
       ADMIN_EMAILS.includes(email)
     );
   } catch {

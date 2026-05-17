@@ -120,7 +120,7 @@ export default function AdminDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
-      const adminEmails = ['sapinosojpm@gmail.com'];
+      const adminEmails = ['sapinosojpm@gmail.com', 'sapinosomille@gmail.com'];
       const envAdminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
         .split(',')
         .map(email => email.trim().toLowerCase())
@@ -128,6 +128,7 @@ export default function AdminDashboard() {
 
       const isUserAdmin = user && user.email && (
         user.email.toLowerCase() === 'sapinosojpm@gmail.com' ||
+        user.email.toLowerCase() === 'sapinosomille@gmail.com' ||
         adminEmails.includes(user.email.toLowerCase()) ||
         envAdminEmails.includes(user.email.toLowerCase())
       );
