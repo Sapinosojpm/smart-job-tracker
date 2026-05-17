@@ -12,7 +12,8 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
-  Activity
+  Activity,
+  Shield
 } from 'lucide-react';
 
 const navItems = [
@@ -57,10 +58,50 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [mounted, setMounted] = React.useState(false);
+  const [isAdmin, setIsAdmin] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
+    
+    const checkAdminStatus = async () => {
+      try {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const adminEmails = ['sapinosojpm@gmail.com'];
+        const envAdminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+          .split(',')
+          .map(email => email.trim().toLowerCase())
+          .filter(Boolean);
+
+        if (user && user.email) {
+          const email = user.email.toLowerCase();
+          if (email === 'sapinosojpm@gmail.com' || adminEmails.includes(email) || envAdminEmails.includes(email)) {
+            setIsAdmin(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check admin status in Sidebar:', err);
+      }
+    };
+
+    checkAdminStatus();
   }, []);
+
+  const itemsToShow = React.useMemo(() => {
+    if (!isAdmin) return navItems;
+    return [
+      ...navItems.slice(0, 5),
+      {
+        href: '/admin',
+        label: 'Admin Panel',
+        icon: Shield,
+        description: 'Site Performance',
+      },
+      navItems[5]
+    ];
+  }, [isAdmin]);
 
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-[4px_0_24px_-12px_rgba(15,23,42,0.12)] print:hidden">
@@ -85,7 +126,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
         <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Menu</p>
-        {navItems.map((item) => {
+        {itemsToShow.map((item) => {
           const isActive = mounted && (
             pathname === item.href ||
             (item.href !== '/jobs' && pathname.startsWith(item.href))
