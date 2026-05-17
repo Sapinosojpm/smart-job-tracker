@@ -325,23 +325,7 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Database Info */}
-          <section className="glass p-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/40">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <Database className="text-emerald-700" size={22} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">Database Connection</h4>
-                  <p className="text-xs text-slate-500 font-medium">Supabase PostgreSQL (Connected)</p>
-                </div>
-              </div>
-              <span className="self-start sm:self-center px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase tracking-wide border border-emerald-100">
-                Online
-              </span>
-            </div>
-          </section>
+
         </div>
 
         <div className="space-y-6">
