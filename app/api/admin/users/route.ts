@@ -57,36 +57,51 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Populate each user settings with their dynamic action/activity counts
-    const usersData = await Promise.all(
-      usersSettings.map(async (setting) => {
-        const [jobCount, applicationCount, logCount] = await Promise.all([
-          prisma.job.count({ where: { userId: setting.userId } }),
-          prisma.application.count({ where: { userId: setting.userId } }),
-          prisma.scraperLog.count({ where: { userId: setting.userId } })
-        ]);
+    const userIds = usersSettings.map(u => u.userId);
 
-        return {
-          id: setting.id,
-          userId: setting.userId,
-          plan: setting.plan,
-          scraperQuery: setting.scraperQuery,
-          keywordFilters: setting.keywordFilters,
-          emailTo: setting.emailTo,
-          scrapeIndeed: setting.scrapeIndeed,
-          scrapeJobStreet: setting.scrapeJobStreet,
-          scrapeOnlineJobs: setting.scrapeOnlineJobs,
-          scrapeUpwork: setting.scrapeUpwork,
-          scrapeLinkedIn: setting.scrapeLinkedIn,
-          scrapeRemoteOK: setting.scrapeRemoteOK,
-          createdAt: setting.createdAt,
-          updatedAt: setting.updatedAt,
-          jobCount,
-          applicationCount,
-          logCount
-        };
+    // Fetch aggregates for all these users in exactly 3 fast grouped queries
+    const [jobCounts, appCounts, logCounts] = await Promise.all([
+      prisma.job.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: { _all: true }
+      }),
+      prisma.application.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: { _all: true }
+      }),
+      prisma.scraperLog.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: { _all: true }
       })
-    );
+    ]);
+
+    // Convert groups to easy lookup maps
+    const jobCountMap = Object.fromEntries(jobCounts.map(g => [g.userId, g._count._all]));
+    const appCountMap = Object.fromEntries(appCounts.map(g => [g.userId, g._count._all]));
+    const logCountMap = Object.fromEntries(logCounts.map(g => [g.userId, g._count._all]));
+
+    const usersData = usersSettings.map((setting) => ({
+      id: setting.id,
+      userId: setting.userId,
+      plan: setting.plan,
+      scraperQuery: setting.scraperQuery,
+      keywordFilters: setting.keywordFilters,
+      emailTo: setting.emailTo,
+      scrapeIndeed: setting.scrapeIndeed,
+      scrapeJobStreet: setting.scrapeJobStreet,
+      scrapeOnlineJobs: setting.scrapeOnlineJobs,
+      scrapeUpwork: setting.scrapeUpwork,
+      scrapeLinkedIn: setting.scrapeLinkedIn,
+      scrapeRemoteOK: setting.scrapeRemoteOK,
+      createdAt: setting.createdAt,
+      updatedAt: setting.updatedAt,
+      jobCount: jobCountMap[setting.userId] || 0,
+      applicationCount: appCountMap[setting.userId] || 0,
+      logCount: logCountMap[setting.userId] || 0
+    }));
 
     return NextResponse.json({
       success: true,

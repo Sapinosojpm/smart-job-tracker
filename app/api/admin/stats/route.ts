@@ -46,29 +46,25 @@ export async function GET() {
     // 2. Jobs stats
     const totalJobs = await prisma.job.count();
 
-    // Group jobs by source (Indeed, LinkedIn, OnlineJobs, Upwork, JobStreet, RemoteOK)
-    const jobs = await prisma.job.findMany({ select: { source: true } });
-    const sourceCountMap: Record<string, number> = {};
-    jobs.forEach(j => {
-      const src = (j.source || 'Unknown').toUpperCase();
-      sourceCountMap[src] = (sourceCountMap[src] || 0) + 1;
+    // Group jobs by source using performant DB-level aggregation (groupBy)
+    const sourceGroups = await prisma.job.groupBy({
+      by: ['source'],
+      _count: { _all: true }
     });
-    const jobDistribution = Object.entries(sourceCountMap).map(([source, count]) => ({
-      source,
-      count
+    const jobDistribution = sourceGroups.map(group => ({
+      source: (group.source || 'Unknown').toUpperCase(),
+      count: group._count._all
     })).sort((a, b) => b.count - a.count);
 
     // 3. Applications Stats
     const totalApplications = await prisma.application.count();
-    const apps = await prisma.application.findMany({ select: { status: true } });
-    const statusCountMap: Record<string, number> = {};
-    apps.forEach(a => {
-      const stat = (a.status || 'Applied').toUpperCase();
-      statusCountMap[stat] = (statusCountMap[stat] || 0) + 1;
+    const statusGroups = await prisma.application.groupBy({
+      by: ['status'],
+      _count: { _all: true }
     });
-    const appDistribution = Object.entries(statusCountMap).map(([status, count]) => ({
-      status,
-      count
+    const appDistribution = statusGroups.map(group => ({
+      status: (group.status || 'Applied').toUpperCase(),
+      count: group._count._all
     }));
 
     // 4. Scraper Logs aggregation & recent history
