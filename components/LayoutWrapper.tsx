@@ -2,6 +2,11 @@
 
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import dynamic from 'next/dynamic';
+
+const ToastProvider = dynamic(() => import('@/components/ToastProvider'), {
+  ssr: false,
+});
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +25,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           {children}
         </div>
       </main>
+      <ToastProvider />
     </div>
   );
 }

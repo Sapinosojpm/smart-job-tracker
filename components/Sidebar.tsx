@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Briefcase,
@@ -108,7 +109,14 @@ export default function Sidebar() {
       <div className="border-b border-slate-100 px-6 py-6">
         <Link href="/dashboard" className="flex items-center gap-3 group">
           <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-600/10 transition-all duration-300 group-hover:scale-[1.08] border border-slate-100 bg-white shrink-0">
-            <img src="/logo.png" alt="Smart Job Tracker" className="w-full h-full object-contain p-1.5" />
+            <Image 
+              src="/logo.png" 
+              alt="Smart Job Tracker" 
+              width={48} 
+              height={48} 
+              preload={true} 
+              className="w-full h-full object-contain p-1.5" 
+            />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">

@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import LayoutWrapper from '@/components/LayoutWrapper';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -38,19 +36,6 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <LayoutWrapper>{children}</LayoutWrapper>
-        <ToastContainer 
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-          className="z-[9999]"
-        />
       </body>
     </html>
   );
