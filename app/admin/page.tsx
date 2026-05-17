@@ -475,6 +475,7 @@ export default function AdminDashboard() {
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pl-4">User Settings ID</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Plan Tier</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Scraper Query</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Registered</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Job Count</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">App Count</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pr-4 text-right">Actions</th>
@@ -505,7 +506,23 @@ export default function AdminDashboard() {
                       <td className="py-5 font-semibold text-sm text-slate-600 max-w-[220px] truncate">
                         {u.scraperQuery || <span className="text-slate-300">None</span>}
                       </td>
-                      <td className="py-5 font-bold text-slate-700 text-sm">{u.jobCount}</td>
+                      <td className="py-5 font-semibold text-xs text-slate-500">
+                        {new Date(u.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                        <span className="block text-[10px] font-normal text-slate-400 mt-0.5">
+                          {new Date(u.createdAt).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </span>
+                      </td>
+                      <td className="py-5 font-bold text-slate-700 text-sm">
+                        {u.jobCount} <span className="text-slate-400 font-semibold text-xs">/ {u.plan === 'FREE' ? '50 (Daily)' : '∞'}</span>
+                      </td>
                       <td className="py-5 font-bold text-slate-700 text-sm">{u.applicationCount}</td>
                       <td className="py-5 pr-4 text-right">
                         {actionLoading === u.userId ? (
@@ -543,7 +560,7 @@ export default function AdminDashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">No users matched your search criteria.</td>
+                    <td colSpan={7} className="py-10 text-center text-slate-400 font-medium">No users matched your search criteria.</td>
                   </tr>
                 )}
               </tbody>
