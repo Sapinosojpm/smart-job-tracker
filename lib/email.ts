@@ -48,7 +48,7 @@ function buildEmailHtml(jobs: JobAlert[]): string {
     <html>
     <head>
       <meta charset="utf-8" />
-      <title>New Job Alerts – Smart Job Tracker</title>
+      <title>New Job Alerts – JobScoutAI</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; padding: 32px;">
       <div style="max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
@@ -56,7 +56,7 @@ function buildEmailHtml(jobs: JobAlert[]): string {
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 28px 32px;">
           <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: 700;">
-            Smart Job Tracker
+            JobScoutAI
           </h1>
           <p style="margin: 6px 0 0; color: #c7d2fe; font-size: 14px;">
             ${jobs.length} new job${jobs.length > 1 ? 's' : ''} found matching your criteria
@@ -83,7 +83,7 @@ function buildEmailHtml(jobs: JobAlert[]): string {
         <!-- Footer -->
         <div style="padding: 20px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
           <p style="margin: 0; color: #9ca3af; font-size: 12px; text-align: center;">
-            Smart Job Tracker Alert System • You received this because you configured email alerts.
+            JobScoutAI Alert System • You received this because you configured email alerts.
           </p>
         </div>
       </div>
@@ -103,7 +103,7 @@ export async function sendNewJobsEmail(userId: string, jobs: JobAlert[]): Promis
   const transporter = await createTransporter(settings);
 
   await transporter.sendMail({
-    from: `"Smart Job Tracker" <${settings.emailUser}>`,
+    from: `"JobScoutAI" <${settings.emailUser}>`,
     to: settings.emailTo,
     subject: `${jobs.length} New Job Alert${jobs.length > 1 ? 's' : ''} Found!`,
     html: buildEmailHtml(jobs),

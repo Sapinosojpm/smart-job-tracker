@@ -37,7 +37,7 @@ export async function GET() {
   return new NextResponse(csvContent, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="smart-job-tracker-export-${new Date().toISOString().split('T')[0]}.csv"`,
+      'Content-Disposition': `attachment; filename="jobscoutai-export-${new Date().toISOString().split('T')[0]}.csv"`,
     },
   });
 }

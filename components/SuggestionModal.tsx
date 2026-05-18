@@ -1,14 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { X, Lightbulb, Loader2, CheckCircle2, MessageSquarePlus } from 'lucide-react';
-import { toast } from 'react-toastify';
+import React, { useState } from "react";
+import {
+  X,
+  Lightbulb,
+  Loader2,
+  CheckCircle2,
+  MessageSquarePlus,
+} from "lucide-react";
+import { toast } from "react-toastify";
 
-export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [category, setCategory] = useState('Feature Request');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [priority, setPriority] = useState<'Nice to Have' | 'Important' | 'Critical'>('Important');
+export default function SuggestionModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [category, setCategory] = useState("Feature Request");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [priority, setPriority] = useState<
+    "Nice to Have" | "Important" | "Critical"
+  >("Important");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -17,32 +31,32 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      toast.error('Please fill in the title and description.');
+      toast.error("Please fill in the title and description.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch('/api/suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category, title, content, priority }),
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Submission failed');
+      if (!data.success) throw new Error(data.error || "Submission failed");
 
       setSuccess(true);
-      toast.success('Thank you! Your suggestion has been recorded.');
+      toast.success("Thank you! Your suggestion has been recorded.");
       setTimeout(() => {
         setSuccess(false);
-        setTitle('');
-        setContent('');
-        setCategory('Feature Request');
-        setPriority('Important');
+        setTitle("");
+        setContent("");
+        setCategory("Feature Request");
+        setPriority("Important");
         onClose();
       }, 2500);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to submit suggestion.');
+      toast.error(err.message || "Failed to submit suggestion.");
     } finally {
       setLoading(false);
     }
@@ -50,8 +64,11 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]">
-      <div onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-      
+      <div
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      />
+
       <div className="relative w-full max-w-[500px] bg-white rounded-3xl p-8 md:p-10 shadow-2xl border border-slate-100 animate-fade-up">
         <button
           onClick={onClose}
@@ -65,9 +82,12 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
             <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
               <CheckCircle2 size={36} className="stroke-[1.5]" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Suggestion Submitted!</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Suggestion Submitted!
+            </h3>
             <p className="text-sm text-slate-500 max-w-sm mx-auto">
-              Your feedback is extremely valuable. We will review your suggestion to improve the application.
+              Your feedback is extremely valuable. We will review your
+              suggestion to improve the application.
             </p>
           </div>
         ) : (
@@ -78,8 +98,12 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
                 <Lightbulb size={24} className="stroke-[1.5]" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Suggest Improvements</h3>
-                <p className="text-xs font-semibold text-slate-500">Help us make Smart Job Tracker even better.</p>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Suggest Improvements
+                </h3>
+                <p className="text-xs font-semibold text-slate-500">
+                  Help us make JobScoutAI even better.
+                </p>
               </div>
             </div>
 
@@ -93,8 +117,16 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
               >
-                {['Feature Request', 'UI/UX Design', 'Bug Report', 'Platform Integration', 'Other'].map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {[
+                  "Feature Request",
+                  "UI/UX Design",
+                  "Bug Report",
+                  "Platform Integration",
+                  "Other",
+                ].map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
               </select>
             </div>
@@ -135,27 +167,29 @@ export default function SuggestionModal({ isOpen, onClose }: { isOpen: boolean; 
                 Priority Level
               </label>
               <div className="grid grid-cols-3 gap-2.5">
-                {(['Nice to Have', 'Important', 'Critical'] as const).map(p => {
-                  const isActive = priority === p;
-                  return (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setPriority(p)}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        isActive
-                          ? p === 'Critical'
-                            ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-sm shadow-rose-100'
-                            : p === 'Important'
-                            ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm shadow-blue-100'
-                            : 'bg-slate-100 border-slate-300 text-slate-800'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
+                {(["Nice to Have", "Important", "Critical"] as const).map(
+                  (p) => {
+                    const isActive = priority === p;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPriority(p)}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          isActive
+                            ? p === "Critical"
+                              ? "bg-rose-50 border-rose-200 text-rose-700 shadow-sm shadow-rose-100"
+                              : p === "Important"
+                                ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm shadow-blue-100"
+                                : "bg-slate-100 border-slate-300 text-slate-800"
+                            : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
 
