@@ -47,6 +47,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Playwright requires browsers which may not be available on serverless
+    if (process.env.VERCEL === '1') {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Scraper is not available in production. Please use the scheduled sync feature or run locally.' 
+      }, { status: 501 });
+    }
+
     // Pass the user ID to the scraper
     const result = await runScraper(user.id, query);
 
