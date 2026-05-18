@@ -10,7 +10,7 @@ interface PlanModalProps {
 }
 
 export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
-  const [loadingPlan, setLoadingPlan] = useState<'FREE' | 'PRO' | 'ELITE' | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<'FREE' | 'PRO' | 'TEAM' | null>(null);
 
   if (!isOpen) return null;
 
@@ -39,12 +39,12 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
       cta: 'Current Plan', recommended: false,
     },
     {
-      id: 'PRO', name: 'Pro', price: '₱299', period: '/mo', icon: <Star size={16} />,
+      id: 'PRO', name: 'Pro', price: '₱99', period: '/mo', icon: <Star size={16} />,
       features: ['Unlimited scraping', '10 smart filters', 'Telegram alerts', 'Salary insights', 'Priority support'],
       cta: 'Upgrade Now', recommended: true,
     },
     {
-      id: 'ELITE', name: 'Elite', price: '₱599', period: '/mo', icon: <Rocket size={16} />,
+      id: 'TEAM', name: 'Elite', price: '₱199', period: '/mo', icon: <Rocket size={16} />,
       features: ['Everything in Pro', 'AI Resume Tailoring', 'Scam Shield Pro', 'Instant Refresh', 'Elite Insights'],
       cta: 'Go Elite', recommended: false,
     },

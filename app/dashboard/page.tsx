@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import PlanModal from '@/components/PlanModal';
 import { 
   Briefcase, 
   CheckCircle, 
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,15 +118,27 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
-             <div className="bg-white border border-slate-100 rounded-[28px] p-5 pr-8 flex items-center gap-4 shadow-sm group hover:shadow-md transition-all">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
-                  userPlan === 'TEAM' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-slate-50 border-slate-100 text-slate-400'
+             <div 
+                onClick={() => setShowPlanModal(true)}
+                className="bg-white border border-slate-100 rounded-[28px] p-5 pr-8 flex items-center gap-4 shadow-sm group hover:shadow-md hover:border-blue-200 transition-all cursor-pointer"
+             >
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all ${
+                  userPlan === 'TEAM' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 
+                  userPlan === 'PRO' ? 'bg-amber-50 border-amber-100 text-amber-500 group-hover:bg-amber-500 group-hover:text-white' :
+                  'bg-slate-50 border-slate-100 text-slate-400 group-hover:bg-blue-600 group-hover:text-white'
                 }`}>
-                   <Zap size={22} strokeWidth={1.5} />
+                   {userPlan === 'TEAM' ? <Rocket size={22} strokeWidth={1.5} /> : <Zap size={22} strokeWidth={1.5} />}
                 </div>
                 <div>
                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Status</div>
-                   <div className="text-sm font-bold text-slate-900">{displayPlan}</div>
+                   <div className="flex items-center gap-2">
+                     <span className="text-sm font-bold text-slate-900">{displayPlan}</span>
+                     {userPlan !== 'TEAM' && (
+                       <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-extrabold uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white transition-all">
+                         Upgrade
+                       </span>
+                     )}
+                   </div>
                 </div>
              </div>
           </div>
@@ -206,6 +220,11 @@ export default function DashboardPage() {
            </div>
         </div>
       </div>
+
+      <PlanModal 
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+      />
     </div>
   );
 }

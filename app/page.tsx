@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import {
   Zap, Search, Bell, ChevronRight, ArrowRight, Target,
   Sparkles, Globe, Mail, Lock, Loader2, X, CheckCircle2,
+  Eye, EyeOff,
   TrendingUp, Users, Briefcase, Star, Play, Shield,
   Clock, BarChart3, Filter, Send, Menu as MenuIcon, Check,
   MessageSquarePlus,
@@ -30,13 +31,17 @@ function NavBar({ onSignIn, onGetStarted }: { onSignIn: () => void; onGetStarted
       }`}>
       <div className="max-w-[1200px] mx-auto px-6 h-[72px] flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shadow-lg shadow-brand/30">
-            <Briefcase size={20} color="white" />
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-10 h-10 shrink-0 transition-all duration-500 group-hover:scale-115 group-hover:rotate-[6deg] group-hover:drop-shadow-[0_4px_12px_rgba(26,86,219,0.2)]">
+            <img 
+              src="/logo.png" 
+              alt="Smart Job Tracker" 
+              className="w-full h-full object-contain" 
+            />
           </div>
           <div>
-            <div className="font-display font-extrabold text-base text-ink leading-none">Smart Job</div>
-            <div className="text-[10px] font-bold text-brand tracking-widest uppercase mt-0.5">Tracker</div>
+            <div className="font-display font-extrabold text-base text-ink leading-none transition-colors duration-300 group-hover:text-brand">Smart Job</div>
+            <div className="text-[10px] font-brand tracking-widest uppercase mt-0.5 text-ink-3 transition-colors duration-300 group-hover:text-brand">Tracker</div>
           </div>
         </div>
 
@@ -113,15 +118,42 @@ function NavBar({ onSignIn, onGetStarted }: { onSignIn: () => void; onGetStarted
 
 function HeroSection({ stats, onGetStarted }: { stats: any; onGetStarted: () => void }) {
   const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCoords({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white pt-[72px]">
+    <section 
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white pt-[72px]"
+    >
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-[radial-gradient(ellipse,_rgba(26,86,219,0.06)_0%,_transparent_70%)]" />
         <div className="absolute bottom-[5%] left-[-5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,_rgba(6,182,212,0.05)_0%,_transparent_70%)]" />
         <div className="absolute bottom-[5%] right-[-5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,_rgba(26,86,219,0.05)_0%,_transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(26,86,219,0.1)_1px,_transparent_1px)] bg-[length:40px_40px] opacity-35" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(26,86,219,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,86,219,0.12)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_40%,#000_40%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_80%_60%_at_50%_40%,#000_40%,transparent_90%)]" />
+        
+        {/* Dynamic spotlight that tracks the mouse hover */}
+        {isHovered && (
+          <div 
+            className="absolute inset-0 transition-opacity duration-300 opacity-100"
+            style={{
+              background: `radial-gradient(450px circle at ${coords.x}px ${coords.y}px, rgba(26, 86, 219, 0.08), transparent 80%)`
+            }}
+          />
+        )}
       </div>
 
       <div className="w-full max-w-[1200px] mx-auto px-6 py-20 relative z-[1] flex flex-col items-center">
@@ -214,13 +246,25 @@ function LogoMarquee() {
       <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-ink to-transparent z-10 pointer-events-none" />
       <div className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/40 text-center mb-5">Scraping top platforms for you</div>
       <div className="overflow-hidden">
-        <div className="flex gap-16 items-center animate-marquee w-max">
-          {doubled.map((p, i) => (
-            <div key={`${p}-${i}`} className="flex items-center gap-2.5 whitespace-nowrap">
-              <div className="w-2 h-2 rounded-full bg-accent" />
-              <span className="font-display text-base font-bold text-white/70">{p}</span>
-            </div>
-          ))}
+        <div className="flex gap-16 items-center animate-marquee hover:[animation-play-state:paused] w-max cursor-default select-none">
+          {/* Track A */}
+          <div className="flex gap-16 items-center shrink-0">
+            {doubled.map((p, i) => (
+              <div key={`a-${p}-${i}`} className="flex items-center gap-2.5 whitespace-nowrap">
+                <div className="w-2 h-2 rounded-full bg-accent" />
+                <span className="font-display text-base font-bold text-white/70 transition-colors duration-300 hover:text-accent">{p}</span>
+              </div>
+            ))}
+          </div>
+          {/* Track B (Identical clone for perfect gapless looping) */}
+          <div className="flex gap-16 items-center shrink-0" aria-hidden="true">
+            {doubled.map((p, i) => (
+              <div key={`b-${p}-${i}`} className="flex items-center gap-2.5 whitespace-nowrap">
+                <div className="w-2 h-2 rounded-full bg-accent" />
+                <span className="font-display text-base font-bold text-white/70 transition-colors duration-300 hover:text-accent">{p}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -431,13 +475,13 @@ function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
       cta: 'Start Free Now', color: 'emerald', popular: false
     },
     {
-      name: 'Basic Pro', price: '₱299', period: '/month', icon: <Star className="text-blue-500" fill="currentColor" />,
+      name: 'Basic Pro', price: '₱99', period: '/month', icon: <Star className="text-blue-500" fill="currentColor" />,
       desc: 'For freelancers who want to apply faster.',
       features: ['Unlimited scraping', '10 smart filters', 'Telegram alerts', 'Salary insights', 'Priority detection'],
       cta: 'Start Applying Now', color: 'blue', popular: true, badge: 'Most Popular'
     },
     {
-      name: 'Elite Plan', price: '₱999', period: '/month', icon: <Zap className="text-indigo-600" fill="currentColor" />,
+      name: 'Elite Plan', price: '₱199', period: '/month', icon: <Zap className="text-indigo-600" fill="currentColor" />,
       desc: 'For elite individuals who want absolute speed.',
       features: ['Everything in Pro', 'AI Resume Builder', 'Cover Letter Generator', 'Unlimited exports', 'Priority Support'],
       cta: 'Get Elite Access', color: 'indigo', popular: false
@@ -558,8 +602,12 @@ function Footer() {
       <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
         <div>
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <Briefcase size={16} color="white" />
+            <div className="w-8 h-8 shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="Smart Job Tracker" 
+                className="w-full h-full object-contain" 
+              />
             </div>
             <span className="font-display font-extrabold text-white text-base tracking-tight">Smart Job Tracker</span>
           </div>
@@ -577,27 +625,43 @@ function Footer() {
 
 /* ─── Auth Modal ─────────────────────────────────────────────────── */
 function AuthModal({ isOpen, onClose, defaultSignUp = false }: { isOpen: boolean; onClose: () => void; defaultSignUp?: boolean }) {
-  const [isSignUp, setIsSignUp] = useState(defaultSignUp);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => { setIsSignUp(defaultSignUp); }, [defaultSignUp]);
+  useEffect(() => { 
+    setAuthMode(defaultSignUp ? 'signup' : 'signin'); 
+  }, [defaultSignUp, isOpen]);
 
   if (!isOpen) return null;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     try {
-      if (isSignUp) {
+      if (authMode === 'signup') {
+        if (password !== confirmPassword) {
+          toast.error('Passwords do not match.');
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
         if (error) throw error;
         toast.info('Check your email for the confirmation link!');
-      } else {
+      } else if (authMode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         window.location.href = '/jobs';
+      } else if (authMode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`
+        });
+        if (error) throw error;
+        toast.success('Password reset link sent to your email! Please check your inbox.');
+        setAuthMode('signin');
       }
     } catch (err: any) { toast.error(err.message); }
     finally { setLoading(false); }
@@ -623,46 +687,79 @@ function AuthModal({ isOpen, onClose, defaultSignUp = false }: { isOpen: boolean
 
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-brand flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand/35">
-            <Briefcase size={24} color="white" />
+          <div className="w-14 h-14 mx-auto mb-4 shrink-0 flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Smart Job Tracker" 
+              className="w-full h-full object-contain" 
+            />
           </div>
-          <h3 className="font-display text-2xl font-extrabold text-ink mb-2">{isSignUp ? 'Create Account' : 'Welcome Back'}</h3>
-          <p className="text-sm text-ink-3 font-medium">{isSignUp ? 'Start finding your dream job today.' : 'Sign in to your dashboard.'}</p>
+          <h3 className="font-display text-2xl font-extrabold text-ink mb-2">
+            {authMode === 'signup' ? 'Create Account' : authMode === 'signin' ? 'Welcome Back' : 'Reset Password'}
+          </h3>
+          <p className="text-sm text-ink-3 font-medium">
+            {authMode === 'signup' ? 'Start finding your dream job today.' : authMode === 'signin' ? 'Sign in to your dashboard.' : 'Enter your email to receive a password reset link.'}
+          </p>
         </div>
 
-        {/* Google */}
-        <button
-          onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-border bg-white text-sm font-bold text-ink-2 hover:border-brand hover:text-brand transition-all mb-6"
-        >
-          <Globe size={18} className="text-blue-500" /> Continue with Google
-        </button>
+        {authMode !== 'forgot' && (
+          <>
+            {/* Google */}
+            <button
+              onClick={handleGoogle}
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-border bg-white text-sm font-bold text-ink-2 hover:border-brand hover:text-brand transition-all mb-6"
+            >
+              <Globe size={18} className="text-blue-500" /> Continue with Google
+            </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-[10px] font-black text-ink-4 tracking-widest uppercase">OR</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] font-black text-ink-4 tracking-widest uppercase">OR</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          </>
+        )}
 
         {/* Form */}
         <form onSubmit={handleAuth} className="flex flex-col gap-4">
           {[
             { label: 'Email', type: 'email', value: email, set: setEmail, icon: <Mail size={16} />, placeholder: 'name@example.com' },
-            { label: 'Password', type: 'password', value: password, set: setPassword, icon: <Lock size={16} />, placeholder: '••••••••' },
-          ].map(f => (
+            { label: 'Password', type: 'password', value: password, set: setPassword, icon: <Lock size={16} />, placeholder: '••••••••', show: authMode !== 'forgot' },
+            { label: 'Confirm Password', type: 'password', value: confirmPassword, set: setConfirmPassword, icon: <Lock size={16} />, placeholder: '••••••••', show: authMode === 'signup' },
+          ].filter(f => f.show !== false).map(f => (
             <div key={f.label}>
               <label className="block text-[11px] font-extrabold text-ink-3 tracking-widest uppercase mb-2">{f.label}</label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-4">{f.icon}</div>
                 <input
-                  type={f.type}
+                  type={f.type === 'password' && showPassword ? 'text' : f.type}
                   required
                   value={f.value}
                   onChange={e => f.set(e.target.value)}
                   placeholder={f.placeholder}
-                  className="w-full py-3 pl-11 pr-4 rounded-xl border-2 border-border bg-surface text-sm font-semibold outline-none focus:border-brand transition-colors"
+                  className="w-full py-3 pl-11 pr-12 rounded-xl border-2 border-border bg-surface text-sm font-semibold outline-none focus:border-brand transition-colors"
                 />
+                {f.type === 'password' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-4 hover:text-brand transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                )}
               </div>
+              {f.label === 'Password' && authMode === 'signin' && (
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode('forgot')}
+                    className="text-[11px] font-bold text-brand hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           <button
@@ -670,15 +767,32 @@ function AuthModal({ isOpen, onClose, defaultSignUp = false }: { isOpen: boolean
             disabled={loading}
             className="shimmer-btn w-full py-3.5 rounded-xl text-[15px] font-bold text-white flex items-center justify-center gap-2.5 disabled:opacity-70 mt-2 hover:scale-[1.02] active:scale-95 transition-transform"
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <><span className="mt-0.5">{isSignUp ? 'Create Account' : 'Sign In'}</span><ChevronRight size={18} /></>}
+            {loading ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <>
+                <span className="mt-0.5">
+                  {authMode === 'signup' ? 'Create Account' : authMode === 'signin' ? 'Sign In' : 'Send Reset Link'}
+                </span>
+                <ChevronRight size={18} />
+              </>
+            )}
           </button>
         </form>
 
         <p className="text-center mt-8 text-sm text-ink-3 font-medium">
-          {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-          <button onClick={() => setIsSignUp(!isSignUp)} className="text-brand font-bold hover:underline">
-            {isSignUp ? 'Sign In' : 'Sign Up Free'}
-          </button>
+          {authMode === 'forgot' ? (
+            <button onClick={() => setAuthMode('signin')} className="text-brand font-bold hover:underline">
+              Back to Sign In
+            </button>
+          ) : (
+            <>
+              {authMode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
+              <button onClick={() => setAuthMode(authMode === 'signup' ? 'signin' : 'signup')} className="text-brand font-bold hover:underline">
+                {authMode === 'signup' ? 'Sign In' : 'Sign Up Free'}
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>

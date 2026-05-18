@@ -16,10 +16,10 @@ import {
   Plus,
   Target,
   Send,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import CancelSubscriptionModal from './CancelSubscriptionModal';
 
 interface ISettings {
   scraperQuery: string;
@@ -57,8 +57,6 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [canceling, setCanceling] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -129,28 +127,6 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
       toast.error('Failed to save configuration');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    setCanceling(true);
-    try {
-      const res = await fetch('/api/subscription/cancel', {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        setSettings({ ...settings, plan: 'FREE' });
-        setShowCancelModal(false);
-        onSuccess();
-      } else {
-        throw new Error(data.error || 'Failed to cancel subscription');
-      }
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setCanceling(false);
     }
   };
 
@@ -330,16 +306,21 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
               </div>
 
               {/* Telegram Notifications */}
-              <div className="pt-6 border-t border-slate-100">
+              <div className="pt-6 border-t border-slate-100 relative">
                 <label className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2 px-1 mb-4">
                   <Send size={14} />
                   Telegram Notifications
+                  {settings.plan === 'FREE' && (
+                    <span className="text-[8px] bg-amber-500 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider">PRO</span>
+                  )}
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${settings.plan === 'FREE' ? 'opacity-40 pointer-events-none select-none blur-[1px]' : ''}`}>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-500 uppercase px-1">Bot Token</label>
                     <input
                       type="password"
+                      disabled={settings.plan === 'FREE'}
                       value={settings.telegramBotToken}
                       onChange={(e) => setSettings({ ...settings, telegramBotToken: e.target.value })}
                       placeholder="bot123456:ABC-DEF..."
@@ -350,6 +331,7 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                     <label className="text-[10px] font-bold text-slate-500 uppercase px-1">Chat ID</label>
                     <input
                       type="text"
+                      disabled={settings.plan === 'FREE'}
                       value={settings.telegramChatId}
                       onChange={(e) => setSettings({ ...settings, telegramChatId: e.target.value })}
                       placeholder="123456789"
@@ -357,37 +339,25 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                     />
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium mt-3 px-1">
-                  Create a bot via @BotFather to get a token and Chat ID.
-                </p>
+
+                {settings.plan === 'FREE' ? (
+                  <div className="absolute inset-x-0 bottom-0 top-12 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[1px] rounded-2xl p-4 text-center z-10">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-2 shadow-sm">
+                      <Lock size={16} className="text-amber-500" />
+                    </div>
+                    <h5 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-1">Telegram Alerts Locked</h5>
+                    <p className="text-[10px] text-slate-500 font-medium max-w-xs leading-normal">
+                      Upgrade to Pro for just ₱99/mo to get direct job notifications on your phone!
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 font-medium mt-3 px-1">
+                    Create a bot via @BotFather to get a token and Chat ID.
+                  </p>
+                )}
               </div>
 
-              {/* Plan Management */}
-              {settings.plan !== 'FREE' && (
-                <div className="pt-6 border-t border-slate-100">
-                  <label className="text-[11px] font-black text-red-600 uppercase tracking-[0.2em] flex items-center gap-2 px-1 mb-4">
-                    <ShieldAlert size={14} />
-                    Plan Management
-                  </label>
-                  
-                  <div className="bg-red-50/50 border border-red-100 rounded-2xl p-5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-900">Cancel Subscription</h4>
-                        <p className="text-[11px] text-slate-500 font-medium mt-1">
-                          You will lose access to {settings.plan === 'TEAM' ? 'Elite' : 'Pro'} features immediately.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setShowCancelModal(true)}
-                        className="px-4 py-2 rounded-xl border border-red-200 text-red-600 text-[11px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+
             </div>
           )}
         </div>
@@ -415,13 +385,7 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
         </div>
       </div>
 
-      <CancelSubscriptionModal
-        isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        onConfirm={handleCancelSubscription}
-        loading={canceling}
-        planName={settings.plan === 'TEAM' ? 'Elite' : 'Pro'}
-      />
+
     </div>
   );
 }

@@ -44,7 +44,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
     companyName: job.company,
     jobTitle: job.title,
     jobLink: job.link,
-    status: 'Pending',
+    status: 'Applied',
     notes: '',
     yearsOfExperience: '',
     requiredSkills: '',
@@ -178,7 +178,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="w-full text-sm font-semibold p-4 rounded-2xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all shadow-sm appearance-none cursor-pointer"
                 >
-                  {['Pending', 'Interview', 'Technical Test', 'Offered', 'Rejected', 'Withdrawn'].map(s => (
+                  {['Pending', 'Applied', 'Interview', 'Technical Test', 'Offered', 'Rejected', 'Withdrawn'].map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>

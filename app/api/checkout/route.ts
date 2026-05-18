@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     }
 
     // Prices in Centavos (PHP 1.00 = 100)
-    const amount = plan === 'PRO' ? 29900 : 79900; 
-    const planName = plan === 'PRO' ? 'Pro Plan' : 'Team Plan';
+    const amount = plan === 'PRO' ? 9900 : 19900; 
+    const planName = plan === 'PRO' ? 'Pro Plan' : 'Elite Plan';
 
     const options = {
       method: 'POST',

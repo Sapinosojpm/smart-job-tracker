@@ -15,10 +15,12 @@ import {
   Eye,
   EyeOff,
   HelpCircle,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import CancelSubscriptionModal from '@/components/CancelSubscriptionModal';
+import PlanModal from '@/components/PlanModal';
 
 interface ISettings {
   telegramBotToken: string;
@@ -54,6 +56,7 @@ export default function SettingsPage() {
   const [showBotToken, setShowBotToken] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -264,13 +267,18 @@ export default function SettingsPage() {
               </div>
 
               {/* Telegram Section */}
-              <div className="space-y-5">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <MessageSquare size={16} className="text-slate-400" />
-                  <span className="text-sm font-bold text-slate-800">Telegram Bot</span>
+              <div className="space-y-5 relative">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare size={16} className="text-slate-400" />
+                    <span className="text-sm font-bold text-slate-800">Telegram Bot</span>
+                  </div>
+                  {settings.plan === 'FREE' && (
+                    <span className="text-[8px] bg-amber-500 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider">PRO</span>
+                  )}
                 </div>
 
-                <div className="space-y-4">
+                <div className={`space-y-4 ${settings.plan === 'FREE' ? 'opacity-40 pointer-events-none select-none blur-[1px]' : ''}`}>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bot Token</label>
@@ -286,6 +294,7 @@ export default function SettingsPage() {
                     <div className="relative">
                       <input 
                         type={showBotToken ? "text" : "password"} 
+                        disabled={settings.plan === 'FREE'}
                         value={settings.telegramBotToken}
                         onChange={(e) => setSettings({ ...settings, telegramBotToken: e.target.value })}
                         className="w-full text-sm p-2.5 pr-10 rounded-lg border border-slate-200 focus:border-blue-300 outline-none transition-all"
@@ -294,6 +303,7 @@ export default function SettingsPage() {
                       <button 
                         type="button"
                         onClick={() => setShowBotToken(!showBotToken)}
+                        disabled={settings.plan === 'FREE'}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
                       >
                         {showBotToken ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -314,6 +324,7 @@ export default function SettingsPage() {
                     </div>
                     <input 
                       type="text" 
+                      disabled={settings.plan === 'FREE'}
                       value={settings.telegramChatId}
                       onChange={(e) => setSettings({ ...settings, telegramChatId: e.target.value })}
                       className="w-full text-sm p-2.5 rounded-lg border border-slate-200 focus:border-blue-300 outline-none transition-all"
@@ -321,6 +332,18 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
+
+                {settings.plan === 'FREE' && (
+                  <div className="absolute inset-x-0 bottom-0 top-8 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[1px] rounded-2xl p-4 text-center z-10">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-2 shadow-sm">
+                      <Lock size={16} className="text-amber-500" />
+                    </div>
+                    <h5 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-1">Telegram Alerts Locked</h5>
+                    <p className="text-[10px] text-slate-500 font-medium max-w-xs leading-normal">
+                      Upgrade to Pro for just ₱99/mo to get direct job notifications on your phone!
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -361,6 +384,16 @@ export default function SettingsPage() {
                 </span>
               </div>
 
+              {settings.plan !== 'TEAM' && (
+                <button
+                  type="button"
+                  onClick={() => setShowPlanModal(true)}
+                  className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                >
+                  Upgrade Plan
+                </button>
+              )}
+
               {settings.plan !== 'FREE' && (
                 <div className="pt-4 border-t border-slate-100">
                   <button
@@ -382,6 +415,11 @@ export default function SettingsPage() {
         onConfirm={handleCancelSubscription}
         loading={canceling}
         planName={settings.plan === 'TEAM' ? 'Elite' : 'Pro'}
+      />
+
+      <PlanModal 
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
       />
     </div>
   );

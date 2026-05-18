@@ -17,6 +17,7 @@ import {
   Zap,
   Download,
   Briefcase,
+  Lock
 } from 'lucide-react';
 import ScrapeButton from '@/components/ScrapeButton';
 import ApplyModal from '@/components/ApplyModal';
@@ -325,10 +326,16 @@ export default function JobsPage() {
                 </div>
               )}
 
-              {job.isScam && userPlan !== 'FREE' && (
-                <div className="absolute left-16 top-4 z-10 rounded-full bg-red-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white animate-pulse">
-                  Scam Alert
-                </div>
+              {job.isScam && (
+                userPlan === 'TEAM' ? (
+                  <div className="absolute left-16 top-4 z-10 rounded-full bg-red-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white animate-pulse">
+                    Scam Alert
+                  </div>
+                ) : (
+                  <div className="absolute left-16 top-4 z-10 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white flex items-center gap-1">
+                    <Lock size={10} /> Scam Locked
+                  </div>
+                )
               )}
 
               <div
@@ -407,13 +414,31 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              {job.isScam && job.scamReason && userPlan !== 'FREE' && (
-                <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-100 flex items-start gap-2.5">
-                  <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-[11px] text-red-700 font-medium leading-tight">
-                    <span className="font-bold">Flagged:</span> {job.scamReason}
-                  </p>
-                </div>
+              {job.isScam && (
+                userPlan === 'TEAM' ? (
+                  job.scamReason && (
+                    <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-100 flex items-start gap-2.5">
+                      <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
+                      <p className="text-[11px] text-red-700 font-medium leading-tight">
+                        <span className="font-bold">Flagged:</span> {job.scamReason}
+                      </p>
+                    </div>
+                  )
+                ) : (
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPlanModal(true);
+                    }}
+                    className="mb-5 p-3 rounded-xl bg-amber-50/40 border border-amber-100/60 flex items-center justify-between gap-2 hover:bg-amber-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Lock size={12} className="text-amber-600 shrink-0" />
+                      <span className="text-[10px] text-amber-800 font-black uppercase tracking-wider">Scam Shield Pro</span>
+                    </div>
+                    <span className="text-[8px] text-blue-600 font-extrabold uppercase tracking-widest hover:underline">Unlock in Elite</span>
+                  </div>
+                )
               )}
 
               <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
