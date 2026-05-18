@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Dynamic import to avoid issues with non-Node environments
-    const { runScraper } = await import('@/lib/scraper');
+    const { runScraper } = await import('@/lib/scraper'); // uses HTTP on Vercel, Playwright locally
     const { prisma } = await import('@/lib/prisma');
 
     // Fetch all users who have settings (active users)
