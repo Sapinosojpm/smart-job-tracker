@@ -40,15 +40,14 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
 
-        // Fetch Stats
-        const statsRes = await fetch('/api/stats');
-        const statsData = await statsRes.json();
-        if (statsData.success) setStats(statsData.data);
+        // Fetch both stats and settings in one call
+        const dashRes = await fetch('/api/dashboard');
+        const dashData = await dashRes.json();
 
-        // Fetch Settings (for plan)
-        const settingsRes = await fetch('/api/settings');
-        const settingsData = await settingsRes.json();
-        if (settingsData.success) setSettings(settingsData.data);
+        if (dashData.success) {
+          setStats(dashData.data.stats);
+          setSettings(dashData.data.settings);
+        }
 
       } catch (err) {
         console.error('Failed to fetch dashboard data');
