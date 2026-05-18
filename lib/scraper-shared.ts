@@ -13,6 +13,20 @@ export interface ScrapedJob {
   description?: string;
   salary?: string;
   postedAt?: Date;
+  workMode?: string;
+}
+
+export function classifyWorkMode(title: string, location?: string, description?: string): string {
+  const text = `${title} ${location || ''} ${description || ''}`.toLowerCase();
+  
+  if (text.includes('hybrid') || text.includes('semi-remote') || text.includes('partially remote') || text.includes('flexible location') || text.includes('flexi-place') || text.includes('office or remote')) {
+    return 'Hybrid';
+  }
+  if (text.includes('onsite') || text.includes('on-site') || text.includes('office-based') || text.includes('in-office') || text.includes('in office') || text.includes('physical office') || text.includes('report to office')) {
+    return 'Onsite';
+  }
+  
+  return 'Remote';
 }
 
 export interface ScrapeResult {
@@ -51,6 +65,7 @@ export async function insertUniqueJobs(userId: string, jobs: ScrapedJob[]): Prom
 
       const scamCheck = detectScam(job.title, job.description || '');
       const salaryData = parseSalary(job.salary || null);
+      const workMode = job.workMode || classifyWorkMode(job.title, job.location, job.description);
 
       const newJob = await prisma.job.create({
         data: {
@@ -63,6 +78,7 @@ export async function insertUniqueJobs(userId: string, jobs: ScrapedJob[]): Prom
           salaryMin: salaryData.min,
           salaryMax: salaryData.max,
           currency: salaryData.currency,
+          workMode,
         },
       });
       insertedJobs.push(newJob);

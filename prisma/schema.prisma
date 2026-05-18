@@ -30,6 +30,7 @@ model Job {
   postedAt     DateTime?
   isApplied    Boolean       @default(false)
   isNewListing Boolean       @default(true)
+  workMode     String        @default("Remote") // "Remote" | "Hybrid" | "Onsite"
   
   // Premium Features
   isScam       Boolean       @default(false)
@@ -61,6 +62,7 @@ model Application {
   jobTitle          String
   jobLink           String
   status            String   @default("Pending")
+  workMode          String   @default("Remote") // "Remote" | "Hybrid" | "Onsite"
   notes             String?
   yearsOfExperience String?
   requiredSkills    String[]
@@ -78,19 +80,29 @@ model Settings {
   plan             Plan     @default(FREE)
   scraperQuery     String?
   keywordFilters   String[]
-  scrapeIndeed     Boolean  @default(true)
-  scrapeJobStreet  Boolean  @default(true)
-  scrapeOnlineJobs Boolean  @default(true)
-  scrapeUpwork     Boolean  @default(true)
-  scrapeLinkedIn   Boolean  @default(true)
-  scrapeRemoteOK   Boolean  @default(true)
-  emailUser        String?
-  emailPass        String?
-  emailTo          String?
-  telegramBotToken String?
-  telegramChatId   String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  scrapeWeWorkRemotely Boolean  @default(true)
+  scrapeWellfound      Boolean  @default(true)
+  scrapeWorkingNomads  Boolean  @default(true)
+  scrapeRemoteCo       Boolean  @default(true)
+  scrapeJobspresso     Boolean  @default(true)
+  scrapeNoDesk         Boolean  @default(true)
+  scrapeSkipTheDrive   Boolean  @default(true)
+  scrapeRemoteRocketship Boolean @default(true)
+  scrapeDailyRemote    Boolean  @default(true)
+  scrapeOtta           Boolean  @default(true)
+  scrapeOnlineJobs     Boolean  @default(true)
+  scrapeUpwork         Boolean  @default(true)
+  scrapeRemoteOK       Boolean  @default(true)
+  filterRemote         Boolean  @default(true)
+  filterHybrid         Boolean  @default(true)
+  filterOnsite         Boolean  @default(false)
+  emailUser            String?
+  emailPass            String?
+  emailTo              String?
+  telegramBotToken     String?
+  telegramChatId       String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model ScraperLog {

@@ -24,12 +24,22 @@ import { toast } from 'react-toastify';
 interface ISettings {
   scraperQuery: string;
   keywordFilters: string[];
-  scrapeIndeed: boolean;
-  scrapeJobStreet: boolean;
+  scrapeWeWorkRemotely: boolean;
+  scrapeWellfound: boolean;
+  scrapeWorkingNomads: boolean;
+  scrapeRemoteCo: boolean;
+  scrapeJobspresso: boolean;
+  scrapeNoDesk: boolean;
+  scrapeSkipTheDrive: boolean;
+  scrapeRemoteRocketship: boolean;
+  scrapeDailyRemote: boolean;
+  scrapeOtta: boolean;
   scrapeOnlineJobs: boolean;
   scrapeUpwork: boolean;
-  scrapeLinkedIn: boolean;
   scrapeRemoteOK: boolean;
+  filterRemote: boolean;
+  filterHybrid: boolean;
+  filterOnsite: boolean;
   telegramBotToken: string;
   telegramChatId: string;
   plan: 'FREE' | 'PRO' | 'TEAM';
@@ -45,12 +55,22 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
   const [settings, setSettings] = useState<ISettings>({
     scraperQuery: '',
     keywordFilters: [],
-    scrapeIndeed: true,
-    scrapeJobStreet: true,
+    scrapeWeWorkRemotely: true,
+    scrapeWellfound: true,
+    scrapeWorkingNomads: true,
+    scrapeRemoteCo: true,
+    scrapeJobspresso: true,
+    scrapeNoDesk: true,
+    scrapeSkipTheDrive: true,
+    scrapeRemoteRocketship: true,
+    scrapeDailyRemote: true,
+    scrapeOtta: true,
     scrapeOnlineJobs: true,
     scrapeUpwork: true,
-    scrapeLinkedIn: true,
     scrapeRemoteOK: true,
+    filterRemote: true,
+    filterHybrid: true,
+    filterOnsite: false,
     telegramBotToken: '',
     telegramChatId: '',
     plan: 'FREE',
@@ -89,12 +109,22 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
         setSettings({
           scraperQuery: data.data.scraperQuery || '',
           keywordFilters: data.data.keywordFilters || [],
-          scrapeIndeed: data.data.scrapeIndeed !== false,
-          scrapeJobStreet: data.data.scrapeJobStreet !== false,
+          scrapeWeWorkRemotely: data.data.scrapeWeWorkRemotely !== false,
+          scrapeWellfound: data.data.scrapeWellfound !== false,
+          scrapeWorkingNomads: data.data.scrapeWorkingNomads !== false,
+          scrapeRemoteCo: data.data.scrapeRemoteCo !== false,
+          scrapeJobspresso: data.data.scrapeJobspresso !== false,
+          scrapeNoDesk: data.data.scrapeNoDesk !== false,
+          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive !== false,
+          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship !== false,
+          scrapeDailyRemote: data.data.scrapeDailyRemote !== false,
+          scrapeOtta: data.data.scrapeOtta !== false,
           scrapeOnlineJobs: data.data.scrapeOnlineJobs !== false,
           scrapeUpwork: data.data.scrapeUpwork !== false,
-          scrapeLinkedIn: data.data.scrapeLinkedIn !== false,
           scrapeRemoteOK: data.data.scrapeRemoteOK !== false,
+          filterRemote: data.data.filterRemote !== false,
+          filterHybrid: data.data.filterHybrid !== false,
+          filterOnsite: data.data.filterOnsite === true,
           telegramBotToken: data.data.telegramBotToken || '',
           telegramChatId: data.data.telegramChatId || '',
           plan: data.data.plan || 'FREE',
@@ -226,6 +256,38 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                 </div>
               </div>
 
+              {/* Work Mode Toggles */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                  <Globe size={14} />
+                  Allowed Work Modes
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { id: 'filterRemote', label: 'Remote', desc: 'Work from anywhere', activeColor: 'bg-emerald-50 border-emerald-300 text-emerald-700 font-extrabold ring-4 ring-emerald-50/50' },
+                    { id: 'filterHybrid', label: 'Hybrid', desc: 'Mix of office + home', activeColor: 'bg-amber-50 border-amber-300 text-amber-700 font-extrabold ring-4 ring-amber-50/50' },
+                    { id: 'filterOnsite', label: 'Onsite', desc: 'Office/On-site only', activeColor: 'bg-indigo-50 border-indigo-300 text-indigo-700 font-extrabold ring-4 ring-indigo-50/50' },
+                  ].map((mode) => {
+                    const isChecked = settings[mode.id as keyof ISettings] as boolean;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setSettings({ ...settings, [mode.id]: !isChecked })}
+                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95 ${
+                          isChecked 
+                            ? mode.activeColor 
+                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 font-semibold'
+                        }`}
+                      >
+                        <span className="text-xs uppercase tracking-wider font-extrabold">{mode.label}</span>
+                        <span className="text-[9px] font-semibold opacity-75 mt-1">{mode.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Sources & Keywords Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Target Sources */}
@@ -234,13 +296,20 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                     <Target size={14} />
                     Target Sources
                   </label>
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                     {[
-                      { id: 'scrapeIndeed', label: 'Indeed PH' },
-                      { id: 'scrapeJobStreet', label: 'JobStreet PH' },
-                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph' },
-                      { id: 'scrapeLinkedIn', label: 'LinkedIn' },
-                      { id: 'scrapeRemoteOK', label: 'RemoteOK (Intl)' },
+                      { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'High quality remote-only jobs' },
+                      { id: 'scrapeWellfound', label: 'Wellfound', hint: 'Startup jobs, salary & equity transparent' },
+                      { id: 'scrapeWorkingNomads', label: 'Working Nomads', hint: 'Curated remote job feeds' },
+                      { id: 'scrapeRemoteCo', label: 'Remote.co', hint: 'Curated tech and support jobs' },
+                      { id: 'scrapeJobspresso', label: 'Jobspresso', hint: 'Tech and creative remote jobs' },
+                      { id: 'scrapeNoDesk', label: 'NoDesk', hint: 'Sleek curated remote options' },
+                      { id: 'scrapeSkipTheDrive', label: 'SkipTheDrive', hint: 'Aggregated remote-friendly roles' },
+                      { id: 'scrapeRemoteRocketship', label: 'Remote Rocketship', hint: 'AI-filtered modern remote jobs' },
+                      { id: 'scrapeDailyRemote', label: 'DailyRemote', hint: 'Daily updated mix of remote jobs' },
+                      { id: 'scrapeOtta', label: 'Otta', hint: 'Sleek tech and startup jobs' },
+                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote' },
+                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow' },
                     ].map((source) => {
                       const isChecked = settings[source.id as keyof ISettings] as boolean;
                       return (
@@ -254,9 +323,16 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                           <div className={`transition-all duration-200 ${isChecked ? 'text-blue-600' : 'text-slate-300 group-hover:text-slate-400'}`}>
                             {isChecked ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <Circle size={18} strokeWidth={2} />}
                           </div>
-                          <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
-                            {source.label}
-                          </span>
+                          <div className="flex flex-col min-w-0">
+                            <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
+                              {source.label}
+                            </span>
+                            {'hint' in source && source.hint ? (
+                              <span className="text-[10px] font-medium text-slate-400 leading-snug mt-0.5">
+                                {source.hint}
+                              </span>
+                            ) : null}
+                          </div>
                         </label>
                       );
                     })}

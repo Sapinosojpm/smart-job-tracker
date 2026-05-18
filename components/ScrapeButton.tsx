@@ -63,12 +63,17 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
       const data = await res.json();
 
       if (data.success) {
-        setState('success');
+        const found = data.data?.jobsFound ?? 0;
+        const inserted = data.data?.jobsInserted ?? 0;
+        setState(found > 0 ? 'success' : 'idle');
         toast.update(toastId, {
-          render: `✓ Found ${data.data.jobsFound} jobs, inserted ${data.data.jobsInserted} new ones!`,
-          type: "success",
+          render:
+            found === 0
+              ? 'No jobs found. Enable "Remote APIs (free)" in Settings, or run scrape-worker on your PC for Indeed/JobStreet.'
+              : `✓ Found ${found} jobs, inserted ${inserted} new ones!`,
+          type: found === 0 ? 'warning' : 'success',
           isLoading: false,
-          autoClose: 5000,
+          autoClose: found === 0 ? 8000 : 5000,
         });
         onSuccess?.(data.data.jobsInserted);
         setTimeout(() => setState('idle'), 4000);

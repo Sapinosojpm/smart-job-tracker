@@ -42,6 +42,7 @@ interface Job {
   salaryMin?: number;
   salaryMax?: number;
   currency?: string;
+  workMode?: string;
 }
 
 export default function JobsPage() {
@@ -349,9 +350,18 @@ export default function JobsPage() {
                     <h3 className="mb-1.5 line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-700">
                       {job.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
-                      <Building2 size={14} className="shrink-0 text-slate-400" />
-                      <span className="truncate">{job.company}</span>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-wider ${
+                        job.workMode === 'Hybrid' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                        job.workMode === 'Onsite' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                        'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      }`}>
+                        {job.workMode || 'Remote'}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                        <Building2 size={14} className="shrink-0 text-slate-400" />
+                        <span className="truncate max-w-[120px]">{job.company}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

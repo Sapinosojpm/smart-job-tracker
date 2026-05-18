@@ -19,20 +19,38 @@ export async function GET(request: Request) {
     // 1. Get user settings to know which sources are active
     const settings = await getAppSettings(user.id);
     const activeSources: string[] = [];
-    if (settings.scrapeIndeed !== false) activeSources.push('Indeed PH');
-    if (settings.scrapeJobStreet !== false) activeSources.push('JobStreet PH');
+    if (settings.scrapeWeWorkRemotely) activeSources.push('We Work Remotely');
+    if (settings.scrapeWellfound) activeSources.push('Wellfound');
+    if (settings.scrapeWorkingNomads) activeSources.push('Working Nomads');
+    if (settings.scrapeRemoteCo) activeSources.push('Remote.co');
+    if (settings.scrapeJobspresso) activeSources.push('Jobspresso');
+    if (settings.scrapeNoDesk) activeSources.push('NoDesk');
+    if (settings.scrapeSkipTheDrive) activeSources.push('SkipTheDrive');
+    if (settings.scrapeRemoteRocketship) activeSources.push('Remote Rocketship');
+    if (settings.scrapeDailyRemote) activeSources.push('DailyRemote');
+    if (settings.scrapeOtta) activeSources.push('Otta');
     if (settings.scrapeOnlineJobs !== false) activeSources.push('OnlineJobs.ph');
-    if (settings.scrapeUpwork !== false) activeSources.push('Upwork');
-    if (settings.scrapeLinkedIn !== false) activeSources.push('LinkedIn');
-    // @ts-ignore
-    if (settings.scrapeRemoteOK) activeSources.push('RemoteOK');
-    // @ts-ignore
-    if (settings.scrapeWWR) activeSources.push('WWR');
+    if (settings.scrapeUpwork) activeSources.push('Upwork');
+    if (settings.scrapeRemoteOK) {
+      activeSources.push('RemoteOK');
+      activeSources.push('Remotive');
+      activeSources.push('Arbeitnow');
+    }
+
+    const allowedWorkModes: string[] = [];
+    if (settings.filterRemote !== false) allowedWorkModes.push('Remote');
+    if (settings.filterHybrid !== false) allowedWorkModes.push('Hybrid');
+    if (settings.filterOnsite === true) allowedWorkModes.push('Onsite');
+    
+    if (allowedWorkModes.length === 0) {
+      allowedWorkModes.push('Remote', 'Hybrid');
+    }
 
     // 2. Build the query
     const where: any = {
       userId: user.id,
       source: { in: activeSources }, // Only show jobs from active sources
+      workMode: { in: allowedWorkModes }, // Only show selected work modes
     };
 
     if (filter === 'new') where.isNewListing = true;

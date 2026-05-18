@@ -248,6 +248,7 @@ export default function Sidebar({
 
           <button
             onClick={() => setIsSuggestionOpen(true)}
+            suppressHydrationWarning={true}
             className="mt-3 flex w-full items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all border border-blue-100 hover:border-blue-200 cursor-pointer shadow-sm active:scale-95 duration-200"
           >
             <MessageSquarePlus size={14} />
@@ -266,6 +267,7 @@ export default function Sidebar({
                 await supabase.auth.signOut();
                 window.location.href = "/";
               }}
+              suppressHydrationWarning={true}
               className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors cursor-pointer"
             >
               Sign Out

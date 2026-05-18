@@ -252,68 +252,21 @@ export async function runPlaywrightScraper(userId: string, query?: string): Prom
       userId,
       startedAt: new Date(),
       status: 'running',
-      source: 'multi-source-playwright',
+      source: 'free-apis-local',
       keywords,
     },
   });
 
-  let browser: Browser | null = null;
   try {
-    console.log(`[Scraper] Starting Playwright scrape for User ${userId}: "${searchQuery}"`);
+    console.log(`[Scraper] Starting local API scrape for User ${userId}: "${searchQuery}"`);
 
-    const { chromium } = await import('playwright');
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
-    const context = await browser.newContext({
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    });
-
-    const page = await context.newPage();
-
-    let jobStreetJobs: ScrapedJob[] = [];
-    let indeedJobs: ScrapedJob[] = [];
-    let onlineJobs: ScrapedJob[] = [];
-    let linkedInJobs: ScrapedJob[] = [];
-    let remoteOKJobs: ScrapedJob[] = [];
-
-    if (settings.scrapeJobStreet !== false) {
-      jobStreetJobs = await scrapeJobStreet(page, searchQuery);
-    }
-
-    if (settings.scrapeIndeed !== false) {
-      indeedJobs = await scrapeIndeed(page, searchQuery);
-    }
-
-    if (settings.scrapeOnlineJobs !== false) {
-      onlineJobs = await scrapeOnlineJobs(page, searchQuery);
-    }
-
-    if (settings.scrapeLinkedIn !== false) {
-      linkedInJobs = await scrapeLinkedIn(page, searchQuery);
-    }
-
-    if (settings.scrapeRemoteOK) {
-      remoteOKJobs = await scrapeRemoteOK(page, searchQuery);
-    }
-
-    const allJobs = [
-      ...jobStreetJobs,
-      ...indeedJobs,
-      ...onlineJobs,
-      ...linkedInJobs,
-      ...remoteOKJobs,
-    ];
+    const { collectFreeApiJobs } = await import('./scraper-free-apis');
+    const allJobs = await collectFreeApiJobs(settings, searchQuery);
 
     return await finalizeScrape(userId, log.id, allJobs, searchQuery, keywords);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     await markScrapeFailed(log.id, userId, message);
     throw err;
-  } finally {
-    if (browser) await browser.close();
   }
 }

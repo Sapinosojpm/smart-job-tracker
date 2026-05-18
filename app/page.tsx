@@ -222,8 +222,7 @@ function HeroSection({
 
           {/* Sub */}
           <p className="animate-fade-up animate-delay-[0.3s] text-lg md:text-[1.15rem] text-ink-3 leading-relaxed mb-10 max-w-[560px] mx-auto font-medium">
-            We automatically scrape JobStreet, Indeed & OnlineJobs.ph, filter to
-            your profile, and ping you the moment a match appears.
+            We automatically scrape We Work Remotely, Wellfound, Working Nomads, Remote.co, and 8+ major remote platforms, and alert you the second a match is live.
           </p>
 
           {/* CTA group */}
@@ -298,11 +297,18 @@ function HeroSection({
 }
 
 const PLATFORMS = [
-  "Indeed PH",
-  "JobStreet PH",
+  "We Work Remotely",
+  "Wellfound",
+  "Working Nomads",
+  "Remote.co",
+  "Jobspresso",
+  "NoDesk",
+  "SkipTheDrive",
+  "Remote Rocketship",
+  "DailyRemote",
+  "Otta",
   "OnlineJobs.ph",
-  "LinkedIn",
-  "RemoteOK (Intl)",
+  "RemoteOK",
 ];
 
 function LogoMarquee() {

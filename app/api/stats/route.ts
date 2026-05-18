@@ -15,15 +15,23 @@ export async function GET(request: NextRequest) {
     // 1. Get active sources from user settings
     const settings = await getAppSettings(user.id);
     const activeSources: string[] = [];
-    if (settings.scrapeIndeed !== false) activeSources.push('Indeed PH');
-    if (settings.scrapeJobStreet !== false) activeSources.push('JobStreet PH');
+    if (settings.scrapeWeWorkRemotely) activeSources.push('We Work Remotely');
+    if (settings.scrapeWellfound) activeSources.push('Wellfound');
+    if (settings.scrapeWorkingNomads) activeSources.push('Working Nomads');
+    if (settings.scrapeRemoteCo) activeSources.push('Remote.co');
+    if (settings.scrapeJobspresso) activeSources.push('Jobspresso');
+    if (settings.scrapeNoDesk) activeSources.push('NoDesk');
+    if (settings.scrapeSkipTheDrive) activeSources.push('SkipTheDrive');
+    if (settings.scrapeRemoteRocketship) activeSources.push('Remote Rocketship');
+    if (settings.scrapeDailyRemote) activeSources.push('DailyRemote');
+    if (settings.scrapeOtta) activeSources.push('Otta');
     if (settings.scrapeOnlineJobs !== false) activeSources.push('OnlineJobs.ph');
-    if (settings.scrapeUpwork !== false) activeSources.push('Upwork');
-    if (settings.scrapeLinkedIn !== false) activeSources.push('LinkedIn');
-    // @ts-ignore
-    if (settings.scrapeRemoteOK) activeSources.push('RemoteOK');
-    // @ts-ignore
-    if (settings.scrapeWWR) activeSources.push('WWR');
+    if (settings.scrapeUpwork) activeSources.push('Upwork');
+    if (settings.scrapeRemoteOK) {
+      activeSources.push('RemoteOK');
+      activeSources.push('Remotive');
+      activeSources.push('Arbeitnow');
+    }
 
     const { searchParams } = new URL(request.url);
     const since = searchParams.get('since');

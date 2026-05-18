@@ -27,6 +27,7 @@ interface Job {
   company: string;
   link: string;
   source: string;
+  workMode?: string;
 }
 
 interface ApplyModalProps {
@@ -45,6 +46,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
     jobTitle: job.title,
     jobLink: job.link,
     status: 'Applied',
+    workMode: job.workMode || 'Remote',
     notes: '',
     yearsOfExperience: '',
     requiredSkills: '',
@@ -180,6 +182,22 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                 >
                   {['Pending', 'Applied', 'Interview', 'Technical Test', 'Offered', 'Rejected', 'Withdrawn'].map(s => (
                     <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                  <Globe size={14} className="text-blue-500" />
+                  Work Mode
+                </label>
+                <select 
+                  value={formData.workMode}
+                  onChange={(e) => setFormData({ ...formData, workMode: e.target.value })}
+                  className="w-full text-sm font-semibold p-4 rounded-2xl border border-slate-200 bg-white text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                  {['Remote', 'Hybrid', 'Onsite'].map(mode => (
+                    <option key={mode} value={mode}>{mode}</option>
                   ))}
                 </select>
               </div>

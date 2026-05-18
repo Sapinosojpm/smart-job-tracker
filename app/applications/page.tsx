@@ -14,9 +14,12 @@ import {
   ChevronRight,
   ClipboardList,
   ChevronDown,
-  Trash2
+  Trash2,
+  Pencil,
+  Globe
 } from 'lucide-react';
 import DeleteModal from '@/components/DeleteModal';
+import EditApplicationModal from '@/components/EditApplicationModal';
 import { toast } from 'react-toastify';
 
 interface Application {
@@ -27,6 +30,7 @@ interface Application {
   jobTitle: string;
   jobLink: string;
   status: string;
+  workMode: string;
   notes: string;
   yearsOfExperience: string;
   requiredSkills: string[];
@@ -41,6 +45,8 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [updatingWorkModeId, setUpdatingWorkModeId] = useState<string | null>(null);
+  const [selectedAppForEdit, setSelectedAppForEdit] = useState<Application | null>(null);
   const [selectedAppForDelete, setSelectedAppForDelete] = useState<Application | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -80,6 +86,27 @@ export default function ApplicationsPage() {
       toast.error('Failed to update status');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const updateWorkMode = async (id: string, newWorkMode: string) => {
+    setUpdatingWorkModeId(id);
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workMode: newWorkMode }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setApplications(apps => apps.map(app => app.id === id ? { ...app, workMode: newWorkMode } : app));
+        toast.success(`Work mode updated to ${newWorkMode}`);
+      }
+    } catch (err) {
+      console.error('Update work mode error:', err);
+      toast.error('Failed to update work mode');
+    } finally {
+      setUpdatingWorkModeId(null);
     }
   };
 
@@ -144,6 +171,7 @@ export default function ApplicationsPage() {
             placeholder="Search by company or role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            suppressHydrationWarning={true}
             className="w-full rounded-xl border border-transparent bg-white/80 py-3 pl-12 pr-4 text-sm font-medium text-slate-900 shadow-inner placeholder:text-slate-400 focus:border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
         </div>
@@ -156,6 +184,7 @@ export default function ApplicationsPage() {
               <tr className="bg-slate-50/80 border-b border-slate-200">
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date & Role</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Company & Platform</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Work Mode</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Exp / Skills</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Remarks</th>
@@ -165,7 +194,7 @@ export default function ApplicationsPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                       <p className="text-sm font-medium text-slate-500">Loading your history...</p>
@@ -174,7 +203,7 @@ export default function ApplicationsPage() {
                 </tr>
               ) : filteredApps.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center">
                         <ClipboardList className="text-slate-300" size={24} />
@@ -188,7 +217,16 @@ export default function ApplicationsPage() {
                   <tr key={app.id} className="hover:bg-indigo-50/30 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{app.jobTitle}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{app.jobTitle}</span>
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full border font-black uppercase tracking-wider ${
+                            app.workMode === 'Hybrid' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                            app.workMode === 'Onsite' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                            'bg-emerald-50 border-emerald-200 text-emerald-700'
+                          }`}>
+                            {app.workMode || 'Remote'}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-1.5 mt-1 text-[10px] font-medium text-slate-400">
                           <Calendar size={12} />
                           {new Date(app.applicationDate).toLocaleDateString()}
@@ -199,6 +237,30 @@ export default function ApplicationsPage() {
                       <div className="flex flex-col">
                         <span className="text-xs font-semibold text-slate-700">{app.companyName}</span>
                         <span className="text-[10px] text-indigo-600 font-bold uppercase mt-0.5">{app.platform}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-center relative">
+                        {updatingWorkModeId === app.id ? (
+                          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <div className="relative group/workmode">
+                            <select
+                              value={app.workMode || 'Remote'}
+                              onChange={(e) => updateWorkMode(app.id, e.target.value)}
+                              className={`appearance-none px-3 py-1.5 pr-8 rounded-full text-[10px] font-bold uppercase border shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all ${
+                                app.workMode === 'Hybrid' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                app.workMode === 'Onsite' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              }`}
+                            >
+                              {['Remote', 'Hybrid', 'Onsite'].map(mode => (
+                                <option key={mode} value={mode} className="bg-white text-slate-900">{mode}</option>
+                              ))}
+                            </select>
+                            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 text-slate-500" />
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -242,6 +304,13 @@ export default function ApplicationsPage() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAppForEdit(app)}
+                          className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                        >
+                          <Pencil size={16} />
+                        </button>
                         <a 
                           href={app.jobLink} 
                           target="_blank" 
@@ -266,6 +335,14 @@ export default function ApplicationsPage() {
           </table>
         </div>
       </div>
+
+      {selectedAppForEdit && (
+        <EditApplicationModal
+          application={selectedAppForEdit}
+          onClose={() => setSelectedAppForEdit(null)}
+          onSuccess={fetchApplications}
+        />
+      )}
 
       {selectedAppForDelete && (
         <DeleteModal

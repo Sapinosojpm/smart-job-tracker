@@ -5,12 +5,22 @@ export interface ISettings {
   userId: string;
   scraperQuery: string;
   keywordFilters: string[];
-  scrapeIndeed: boolean;
-  scrapeJobStreet: boolean;
+  scrapeWeWorkRemotely: boolean;
+  scrapeWellfound: boolean;
+  scrapeWorkingNomads: boolean;
+  scrapeRemoteCo: boolean;
+  scrapeJobspresso: boolean;
+  scrapeNoDesk: boolean;
+  scrapeSkipTheDrive: boolean;
+  scrapeRemoteRocketship: boolean;
+  scrapeDailyRemote: boolean;
+  scrapeOtta: boolean;
   scrapeOnlineJobs: boolean;
   scrapeUpwork: boolean;
-  scrapeLinkedIn: boolean;
   scrapeRemoteOK: boolean;
+  filterRemote: boolean;
+  filterHybrid: boolean;
+  filterOnsite: boolean;
   emailUser: string | null;
   emailPass: string | null;
   emailTo: string | null;
@@ -31,12 +41,22 @@ export async function getAppSettings(userId: string): Promise<ISettings> {
           userId,
           scraperQuery: 'react developer',
           keywordFilters: [],
-          scrapeIndeed: true,
-          scrapeJobStreet: true,
+          scrapeWeWorkRemotely: true,
+          scrapeWellfound: true,
+          scrapeWorkingNomads: true,
+          scrapeRemoteCo: true,
+          scrapeJobspresso: true,
+          scrapeNoDesk: true,
+          scrapeSkipTheDrive: true,
+          scrapeRemoteRocketship: true,
+          scrapeDailyRemote: true,
+          scrapeOtta: true,
           scrapeOnlineJobs: true,
           scrapeUpwork: false,
-          scrapeLinkedIn: true,
           scrapeRemoteOK: true,
+          filterRemote: true,
+          filterHybrid: true,
+          filterOnsite: false,
           plan: 'FREE',
         }
       });
@@ -51,12 +71,22 @@ export async function getAppSettings(userId: string): Promise<ISettings> {
       userId,
       scraperQuery: 'react developer',
       keywordFilters: [],
-      scrapeIndeed: true,
-      scrapeJobStreet: true,
+      scrapeWeWorkRemotely: true,
+      scrapeWellfound: true,
+      scrapeWorkingNomads: true,
+      scrapeRemoteCo: true,
+      scrapeJobspresso: true,
+      scrapeNoDesk: true,
+      scrapeSkipTheDrive: true,
+      scrapeRemoteRocketship: true,
+      scrapeDailyRemote: true,
+      scrapeOtta: true,
       scrapeOnlineJobs: true,
       scrapeUpwork: false,
-      scrapeLinkedIn: true,
       scrapeRemoteOK: true,
+      filterRemote: true,
+      filterHybrid: true,
+      filterOnsite: false,
       emailUser: null,
       emailPass: null,
       emailTo: null,
