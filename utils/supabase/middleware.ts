@@ -73,7 +73,7 @@ export async function updateSession(request: NextRequest) {
   const redirectResponse = (url: URL) => {
     const response = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie.name, cookie.value, cookie.options)
+      response.cookies.set(cookie.name, cookie.value, { path: cookie.path, maxAge: cookie.maxAge, sameSite: cookie.sameSite as any, secure: cookie.secure, httpOnly: cookie.httpOnly })
     })
     return response
   }
