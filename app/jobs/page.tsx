@@ -24,6 +24,7 @@ import ApplyModal from '@/components/ApplyModal';
 import DeleteModal from '@/components/DeleteModal';
 import ConfigModal from '@/components/ConfigModal';
 import PlanModal from '@/components/PlanModal';
+import CacheBanner from '@/components/CacheBanner';
 import { toast } from 'react-toastify';
 
 interface Job {
@@ -530,6 +531,9 @@ export default function JobsPage() {
           loading={isDeleting}
         />
       )}
+
+      {/* Cache Promotion Banner */}
+      <CacheBanner />
     </div>
   );
 }
