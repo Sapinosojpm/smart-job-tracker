@@ -78,8 +78,15 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
+  const [isCloud, setIsCloud] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsCloud(window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+    }
+  }, []);
 
   useGSAP(() => {
     if (isOpen && modalRef.current && backdropRef.current) {
@@ -105,23 +112,25 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
       setLoading(true);
       const res = await fetch('/api/settings');
       const data = await res.json();
+      const isCloudEnv = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      
       if (data.success && data.data) {
         setSettings({
           scraperQuery: data.data.scraperQuery || '',
           keywordFilters: data.data.keywordFilters || [],
           // Read exact DB value — don't use !== false (that forces true even when DB is false)
           scrapeWeWorkRemotely: data.data.scrapeWeWorkRemotely === true,
-          scrapeWellfound: data.data.scrapeWellfound === true,
-          scrapeWorkingNomads: data.data.scrapeWorkingNomads === true,
-          scrapeRemoteCo: data.data.scrapeRemoteCo === true,
-          scrapeJobspresso: data.data.scrapeJobspresso === true,
-          scrapeNoDesk: data.data.scrapeNoDesk === true,
-          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive === true,
-          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship === true,
-          scrapeDailyRemote: data.data.scrapeDailyRemote === true,
-          scrapeOtta: data.data.scrapeOtta === true,
+          scrapeWellfound: data.data.scrapeWellfound === true && !isCloudEnv,
+          scrapeWorkingNomads: data.data.scrapeWorkingNomads === true && !isCloudEnv,
+          scrapeRemoteCo: data.data.scrapeRemoteCo === true && !isCloudEnv,
+          scrapeJobspresso: data.data.scrapeJobspresso === true && !isCloudEnv,
+          scrapeNoDesk: data.data.scrapeNoDesk === true && !isCloudEnv,
+          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive === true && !isCloudEnv,
+          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship === true && !isCloudEnv,
+          scrapeDailyRemote: data.data.scrapeDailyRemote === true && !isCloudEnv,
+          scrapeOtta: data.data.scrapeOtta === true && !isCloudEnv,
           scrapeOnlineJobs: data.data.scrapeOnlineJobs !== false,  // default true
-          scrapeUpwork: data.data.scrapeUpwork === true,
+          scrapeUpwork: data.data.scrapeUpwork === true && !isCloudEnv,
           scrapeRemoteOK: data.data.scrapeRemoteOK !== false,       // default true
           filterRemote: data.data.filterRemote !== false,
           filterHybrid: data.data.filterHybrid !== false,
@@ -318,30 +327,60 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                     ].map((source) => {
                       const isChecked = settings[source.id as keyof ISettings] as boolean;
                       const isLive = source.status === 'LIVE';
+                      const isDisabled = source.status === 'LOCAL ONLY' && isCloud;
                       return (
-                        <label key={source.id} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer group ${isChecked ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
+                        <label 
+                          key={source.id} 
+                          className={`flex items-center gap-3 p-3 rounded-2xl border transition-all group ${
+                            isDisabled 
+                              ? 'opacity-40 bg-slate-50 border-slate-200 cursor-not-allowed select-none' 
+                              : isChecked 
+                                ? 'bg-blue-50 border-blue-200 cursor-pointer' 
+                                : 'bg-white border-slate-100 hover:border-slate-200 cursor-pointer'
+                          }`}
+                        >
                           <input
                             type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => setSettings({ ...settings, [source.id]: e.target.checked })}
+                            checked={isChecked && !isDisabled}
+                            disabled={isDisabled}
+                            onChange={(e) => {
+                              if (isDisabled) return;
+                              setSettings({ ...settings, [source.id]: e.target.checked });
+                            }}
                             className="sr-only"
                           />
-                          <div className={`transition-all duration-200 ${isChecked ? 'text-blue-600' : 'text-slate-300 group-hover:text-slate-400'}`}>
-                            {isChecked ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <Circle size={18} strokeWidth={2} />}
+                          <div className={`transition-all duration-200 ${
+                            isDisabled 
+                              ? 'text-slate-200' 
+                              : isChecked 
+                                ? 'text-blue-600' 
+                                : 'text-slate-300 group-hover:text-slate-400'
+                          }`}>
+                            {isDisabled ? <Lock size={18} strokeWidth={2} /> : isChecked ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <Circle size={18} strokeWidth={2} />}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
+                              <span className={`text-[13px] font-bold ${
+                                isDisabled 
+                                  ? 'text-slate-400 line-through' 
+                                  : isChecked 
+                                    ? 'text-blue-900' 
+                                    : 'text-slate-500'
+                              }`}>
                                 {source.label}
                               </span>
                               <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                                isLive 
+                                  ? 'bg-emerald-100 text-emerald-700' 
+                                  : isDisabled 
+                                    ? 'bg-rose-100 text-rose-700 border border-rose-200' 
+                                    : 'bg-amber-100 text-amber-700'
                               }`}>
-                                {source.status}
+                                {isDisabled ? 'CLOUD-BLOCKED' : source.status}
                               </span>
                             </div>
                             {'hint' in source && source.hint ? (
-                              <span className="text-[10px] font-medium text-slate-400 leading-snug mt-0.5">
+                              <span className={`text-[10px] font-medium leading-snug mt-0.5 ${isDisabled ? 'text-slate-300' : 'text-slate-400'}`}>
                                 {source.hint}
                               </span>
                             ) : null}
