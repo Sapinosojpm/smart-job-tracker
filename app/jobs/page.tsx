@@ -486,6 +486,7 @@ export default function JobsPage() {
         isOpen={showConfigModal}
         onClose={() => setShowConfigModal(false)}
         onSuccess={() => fetchJobs()}
+        initialSettings={settings}
       />
 
       <PlanModal 

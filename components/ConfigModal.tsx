@@ -49,9 +49,10 @@ interface ConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialSettings?: any;
 }
 
-export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalProps) {
+export default function ConfigModal({ isOpen, onClose, onSuccess, initialSettings }: ConfigModalProps) {
   const [settings, setSettings] = useState<ISettings>({
     scraperQuery: '',
     keywordFilters: [],
@@ -103,46 +104,52 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
 
   useEffect(() => {
     if (isOpen) {
-      fetchSettings();
+      if (initialSettings) {
+        applySettings(initialSettings);
+      } else {
+        fetchSettings();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialSettings]);
+
+  const applySettings = (data: any) => {
+    const isCloudEnv = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    setSettings({
+      scraperQuery: data.scraperQuery || '',
+      keywordFilters: data.keywordFilters || [],
+      scrapeWeWorkRemotely: data.scrapeWeWorkRemotely === true,
+      scrapeWellfound: data.scrapeWellfound === true && !isCloudEnv,
+      scrapeWorkingNomads: data.scrapeWorkingNomads === true && !isCloudEnv,
+      scrapeRemoteCo: data.scrapeRemoteCo === true && !isCloudEnv,
+      scrapeJobspresso: data.scrapeJobspresso === true && !isCloudEnv,
+      scrapeNoDesk: data.scrapeNoDesk === true && !isCloudEnv,
+      scrapeSkipTheDrive: data.scrapeSkipTheDrive === true && !isCloudEnv,
+      scrapeRemoteRocketship: data.scrapeRemoteRocketship === true && !isCloudEnv,
+      scrapeDailyRemote: data.scrapeDailyRemote === true && !isCloudEnv,
+      scrapeOtta: data.scrapeOtta === true && !isCloudEnv,
+      scrapeOnlineJobs: data.scrapeOnlineJobs !== false,  // default true
+      scrapeUpwork: data.scrapeUpwork === true && !isCloudEnv,
+      scrapeRemoteOK: data.scrapeRemoteOK !== false,       // default true
+      filterRemote: data.filterRemote !== false,
+      filterHybrid: data.filterHybrid !== false,
+      filterOnsite: data.filterOnsite === true,
+      telegramBotToken: data.telegramBotToken || '',
+      telegramChatId: data.telegramChatId || '',
+      plan: data.plan || 'FREE',
+    });
+    setLoading(false);
+  };
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/settings');
       const data = await res.json();
-      const isCloudEnv = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      
       if (data.success && data.data) {
-        setSettings({
-          scraperQuery: data.data.scraperQuery || '',
-          keywordFilters: data.data.keywordFilters || [],
-          // Read exact DB value — don't use !== false (that forces true even when DB is false)
-          scrapeWeWorkRemotely: data.data.scrapeWeWorkRemotely === true,
-          scrapeWellfound: data.data.scrapeWellfound === true && !isCloudEnv,
-          scrapeWorkingNomads: data.data.scrapeWorkingNomads === true && !isCloudEnv,
-          scrapeRemoteCo: data.data.scrapeRemoteCo === true && !isCloudEnv,
-          scrapeJobspresso: data.data.scrapeJobspresso === true && !isCloudEnv,
-          scrapeNoDesk: data.data.scrapeNoDesk === true && !isCloudEnv,
-          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive === true && !isCloudEnv,
-          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship === true && !isCloudEnv,
-          scrapeDailyRemote: data.data.scrapeDailyRemote === true && !isCloudEnv,
-          scrapeOtta: data.data.scrapeOtta === true && !isCloudEnv,
-          scrapeOnlineJobs: data.data.scrapeOnlineJobs !== false,  // default true
-          scrapeUpwork: data.data.scrapeUpwork === true && !isCloudEnv,
-          scrapeRemoteOK: data.data.scrapeRemoteOK !== false,       // default true
-          filterRemote: data.data.filterRemote !== false,
-          filterHybrid: data.data.filterHybrid !== false,
-          filterOnsite: data.data.filterOnsite === true,
-          telegramBotToken: data.data.telegramBotToken || '',
-          telegramChatId: data.data.telegramChatId || '',
-          plan: data.data.plan || 'FREE',
-        });
+        applySettings(data.data);
       }
     } catch (err) {
       console.error('Failed to fetch settings');
-    } finally {
       setLoading(false);
     }
   };
