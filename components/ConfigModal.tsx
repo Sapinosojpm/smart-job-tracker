@@ -300,11 +300,24 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                   <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                     {[
                       // ✅ WORKING from Vercel server IPs
-                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow, Himalayas, Jobicy — 5 JSON APIs' },
-                      { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'RSS feed — high quality remote-only jobs' },
-                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote hiring' },
+                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow, Himalayas, Jobicy — 5 JSON APIs', status: 'LIVE' },
+                      { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'RSS feed — high quality remote-only jobs', status: 'LIVE' },
+                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote hiring', status: 'LIVE' },
+
+                      // 🛠️ LOCAL / WORKER ONLY sources
+                      { id: 'scrapeWellfound', label: 'Wellfound', hint: 'Startup jobs, salary & equity transparent', status: 'LOCAL ONLY' },
+                      { id: 'scrapeWorkingNomads', label: 'Working Nomads', hint: 'Curated remote job feeds', status: 'LOCAL ONLY' },
+                      { id: 'scrapeRemoteCo', label: 'Remote.co', hint: 'Curated tech and support jobs', status: 'LOCAL ONLY' },
+                      { id: 'scrapeJobspresso', label: 'Jobspresso', hint: 'Tech and creative remote jobs', status: 'LOCAL ONLY' },
+                      { id: 'scrapeNoDesk', label: 'NoDesk', hint: 'Sleek curated remote options', status: 'LOCAL ONLY' },
+                      { id: 'scrapeSkipTheDrive', label: 'SkipTheDrive', hint: 'Aggregated remote-friendly roles', status: 'LOCAL ONLY' },
+                      { id: 'scrapeRemoteRocketship', label: 'Remote Rocketship', hint: 'AI-filtered modern remote jobs', status: 'LOCAL ONLY' },
+                      { id: 'scrapeDailyRemote', label: 'DailyRemote', hint: 'Daily updated mix of remote jobs', status: 'LOCAL ONLY' },
+                      { id: 'scrapeOtta', label: 'Otta', hint: 'Sleek tech and startup jobs', status: 'LOCAL ONLY' },
+                      { id: 'scrapeUpwork', label: 'Upwork', hint: 'Freelance & contract opportunities', status: 'LOCAL ONLY' },
                     ].map((source) => {
                       const isChecked = settings[source.id as keyof ISettings] as boolean;
+                      const isLive = source.status === 'LIVE';
                       return (
                         <label key={source.id} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer group ${isChecked ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
                           <input
@@ -321,7 +334,11 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                               <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
                                 {source.label}
                               </span>
-                              <span className="text-[8px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">LIVE</span>
+                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {source.status}
+                              </span>
                             </div>
                             {'hint' in source && source.hint ? (
                               <span className="text-[10px] font-medium text-slate-400 leading-snug mt-0.5">
