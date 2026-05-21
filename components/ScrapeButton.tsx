@@ -145,6 +145,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
         /* Limit reached — show split button: disabled status + upgrade CTA */
         <div className="flex items-center gap-1">
           <button
+            suppressHydrationWarning
             disabled
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-amber-500 opacity-80 cursor-not-allowed shadow-sm"
             title={`Daily limit reached. Resets in ${timeLeft}`}
@@ -154,6 +155,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
             {timeLeft && <span className="tabular-nums text-xs font-mono opacity-90 ml-1">{timeLeft}</span>}
           </button>
           <button
+            suppressHydrationWarning
             onClick={() => setShowPlanModal(true)}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-600/30 active:scale-95 transition-all"
             title="Upgrade to continue scraping"
@@ -164,6 +166,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
         </div>
       ) : (
         <button
+          suppressHydrationWarning
           onClick={() => setShowConfirmModal(true)}
           disabled={isDisabled}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white transition-all duration-200 active:scale-95 shadow-lg ${config.bg} ${isDisabled ? 'opacity-85 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}

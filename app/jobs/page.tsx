@@ -63,6 +63,7 @@ export default function JobsPage() {
   const [selectedJobForDelete, setSelectedJobForDelete] = useState<Job | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [updatedTime, setUpdatedTime] = useState('');
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -92,6 +93,10 @@ export default function JobsPage() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  useEffect(() => {
+    setUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, []);
 
   const handleDeleteConfirm = async () => {
     if (!selectedJobForDelete) return;
@@ -142,8 +147,8 @@ export default function JobsPage() {
             <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Live Board</span>
             <span className="text-slate-300 mx-1">/</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest" suppressHydrationWarning>
-              Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Updated {updatedTime || '--:--'}
             </span>
           </div>
           <div className="flex items-center gap-3">
