@@ -10,7 +10,10 @@ const UA =
 // Blocked sources fail after 20s each, chaining into a 504.
 // Keep this low so fast APIs (RemoteOK/Remotive/Arbeitnow) always succeed.
 const axiosConfig = {
-  headers: { 'User-Agent': UA, Accept: 'application/json,text/html' },
+  headers: {
+    'User-Agent': UA,
+    Accept: 'application/json,text/html,application/xhtml+xml,application/xml,text/xml',
+  },
   timeout: 8000,
 };
 
@@ -707,12 +710,15 @@ export async function collectFreeApiJobs(
   // Use the scrape-worker for these.
 
   // 50s overall budget — Vercel limit is 60s, leave 10s for DB writes.
-  const budget = new Promise<ScrapedJob[]>((resolve) =>
-    setTimeout(() => {
+  const budget = new Promise<ScrapedJob[]>((resolve) => {
+    const timer = setTimeout(() => {
       console.warn('[Scraper] 50s budget reached — returning partial results.');
       resolve([]);
-    }, 50000),
-  );
+    }, 50000);
+    if (typeof timer.unref === 'function') {
+      timer.unref();
+    }
+  });
 
   const batches = await Promise.race([
     Promise.all(tasks),
