@@ -169,6 +169,7 @@ export default function JobsPage() {
             <ScrapeButton onSuccess={() => fetchJobs()} />
             <div className="w-px h-6 bg-slate-200 mx-1" />
             <button
+              suppressHydrationWarning
               onClick={() => {
                 setIsRefreshing(true);
                 fetchJobs().then(() => setIsRefreshing(false));
@@ -183,6 +184,7 @@ export default function JobsPage() {
           {/* Secondary Actions */}
           <div className="flex items-center gap-1.5 ml-2">
             <button
+              suppressHydrationWarning
               onClick={() => setShowConfigModal(true)}
               className="p-3 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all"
               title="Settings"
@@ -190,6 +192,7 @@ export default function JobsPage() {
               <SettingsIcon size={20} />
             </button>
             <button
+              suppressHydrationWarning
               onClick={() => window.open('/api/jobs/export', '_blank')}
               className="p-3 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
               title="Download CSV"
@@ -197,6 +200,7 @@ export default function JobsPage() {
               <Download size={20} />
             </button>
             <button
+              suppressHydrationWarning
               onClick={() => setShowClearModal(true)}
               className="p-3 rounded-2xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
               title="Clear Board"
@@ -205,6 +209,7 @@ export default function JobsPage() {
             </button>
             {userPlan === 'FREE' && (
               <button
+                suppressHydrationWarning
                 onClick={() => setShowPlanModal(true)}
                 className="ml-2 px-5 py-2.5 rounded-2xl bg-amber-500 text-white font-bold text-xs uppercase tracking-widest hover:bg-amber-600 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
               >
@@ -220,6 +225,7 @@ export default function JobsPage() {
         <div className="relative flex-grow group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
           <input
+            suppressHydrationWarning
             type="text"
             placeholder="Search jobs, companies, or keywords..."
             value={search}
@@ -231,6 +237,7 @@ export default function JobsPage() {
         <div className="flex items-center p-1.5 bg-slate-100/80 backdrop-blur-sm rounded-[20px] border border-slate-200 shrink-0">
           {['all', 'new', 'applied'].map((f) => (
             <button
+              suppressHydrationWarning
               key={f}
               onClick={() => setFilter(f)}
               className={`px-8 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
@@ -281,6 +288,7 @@ export default function JobsPage() {
           <h3 className="text-xl font-bold text-slate-900 mb-2">Could not load jobs</h3>
           <p className="text-slate-600 mb-8 max-w-sm text-sm">{error}</p>
           <button
+            suppressHydrationWarning
             type="button"
             onClick={fetchJobs}
             className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm shadow-md shadow-blue-600/25 hover:bg-blue-700 transition-colors"
@@ -307,6 +315,7 @@ export default function JobsPage() {
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <button
+              suppressHydrationWarning
               onClick={() => setShowConfigModal(true)}
               className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-95"
             >
@@ -372,6 +381,7 @@ export default function JobsPage() {
                 </div>
                 <div className="flex shrink-0 gap-1.5 self-start">
                   <button
+                    suppressHydrationWarning
                     type="button"
                     onClick={() => setSelectedJobForApply(job)}
                     className={`p-2 rounded-xl border transition-all duration-300 ${
@@ -388,6 +398,7 @@ export default function JobsPage() {
                     )}
                   </button>
                   <button
+                    suppressHydrationWarning
                     type="button"
                     onClick={() => setSelectedJobForDelete(job)}
                     className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
