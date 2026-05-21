@@ -56,17 +56,17 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
     scraperQuery: '',
     keywordFilters: [],
     scrapeWeWorkRemotely: true,
-    scrapeWellfound: true,
-    scrapeWorkingNomads: true,
-    scrapeRemoteCo: true,
-    scrapeJobspresso: true,
-    scrapeNoDesk: true,
-    scrapeSkipTheDrive: true,
-    scrapeRemoteRocketship: true,
-    scrapeDailyRemote: true,
-    scrapeOtta: true,
+    scrapeWellfound: false,
+    scrapeWorkingNomads: false,
+    scrapeRemoteCo: false,
+    scrapeJobspresso: false,
+    scrapeNoDesk: false,
+    scrapeSkipTheDrive: false,
+    scrapeRemoteRocketship: false,
+    scrapeDailyRemote: false,
+    scrapeOtta: false,
     scrapeOnlineJobs: true,
-    scrapeUpwork: true,
+    scrapeUpwork: false,
     scrapeRemoteOK: true,
     filterRemote: true,
     filterHybrid: true,
@@ -109,19 +109,20 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
         setSettings({
           scraperQuery: data.data.scraperQuery || '',
           keywordFilters: data.data.keywordFilters || [],
-          scrapeWeWorkRemotely: data.data.scrapeWeWorkRemotely !== false,
-          scrapeWellfound: data.data.scrapeWellfound !== false,
-          scrapeWorkingNomads: data.data.scrapeWorkingNomads !== false,
-          scrapeRemoteCo: data.data.scrapeRemoteCo !== false,
-          scrapeJobspresso: data.data.scrapeJobspresso !== false,
-          scrapeNoDesk: data.data.scrapeNoDesk !== false,
-          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive !== false,
-          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship !== false,
-          scrapeDailyRemote: data.data.scrapeDailyRemote !== false,
-          scrapeOtta: data.data.scrapeOtta !== false,
-          scrapeOnlineJobs: data.data.scrapeOnlineJobs !== false,
-          scrapeUpwork: data.data.scrapeUpwork !== false,
-          scrapeRemoteOK: data.data.scrapeRemoteOK !== false,
+          // Read exact DB value — don't use !== false (that forces true even when DB is false)
+          scrapeWeWorkRemotely: data.data.scrapeWeWorkRemotely === true,
+          scrapeWellfound: data.data.scrapeWellfound === true,
+          scrapeWorkingNomads: data.data.scrapeWorkingNomads === true,
+          scrapeRemoteCo: data.data.scrapeRemoteCo === true,
+          scrapeJobspresso: data.data.scrapeJobspresso === true,
+          scrapeNoDesk: data.data.scrapeNoDesk === true,
+          scrapeSkipTheDrive: data.data.scrapeSkipTheDrive === true,
+          scrapeRemoteRocketship: data.data.scrapeRemoteRocketship === true,
+          scrapeDailyRemote: data.data.scrapeDailyRemote === true,
+          scrapeOtta: data.data.scrapeOtta === true,
+          scrapeOnlineJobs: data.data.scrapeOnlineJobs !== false,  // default true
+          scrapeUpwork: data.data.scrapeUpwork === true,
+          scrapeRemoteOK: data.data.scrapeRemoteOK !== false,       // default true
           filterRemote: data.data.filterRemote !== false,
           filterHybrid: data.data.filterHybrid !== false,
           filterOnsite: data.data.filterOnsite === true,
@@ -298,18 +299,10 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                     {[
-                      { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'High quality remote-only jobs' },
-                      { id: 'scrapeWellfound', label: 'Wellfound', hint: 'Startup jobs, salary & equity transparent' },
-                      { id: 'scrapeWorkingNomads', label: 'Working Nomads', hint: 'Curated remote job feeds' },
-                      { id: 'scrapeRemoteCo', label: 'Remote.co', hint: 'Curated tech and support jobs' },
-                      { id: 'scrapeJobspresso', label: 'Jobspresso', hint: 'Tech and creative remote jobs' },
-                      { id: 'scrapeNoDesk', label: 'NoDesk', hint: 'Sleek curated remote options' },
-                      { id: 'scrapeSkipTheDrive', label: 'SkipTheDrive', hint: 'Aggregated remote-friendly roles' },
-                      { id: 'scrapeRemoteRocketship', label: 'Remote Rocketship', hint: 'AI-filtered modern remote jobs' },
-                      { id: 'scrapeDailyRemote', label: 'DailyRemote', hint: 'Daily updated mix of remote jobs' },
-                      { id: 'scrapeOtta', label: 'Otta', hint: 'Sleek tech and startup jobs' },
-                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote' },
-                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow' },
+                      // ✅ WORKING from Vercel server IPs
+                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow — JSON APIs, always work' },
+                      { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'RSS feed — high quality remote-only jobs' },
+                      { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote hiring' },
                     ].map((source) => {
                       const isChecked = settings[source.id as keyof ISettings] as boolean;
                       return (
@@ -324,9 +317,12 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                             {isChecked ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <Circle size={18} strokeWidth={2} />}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
-                              {source.label}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[13px] font-bold ${isChecked ? 'text-blue-900' : 'text-slate-500'}`}>
+                                {source.label}
+                              </span>
+                              <span className="text-[8px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">LIVE</span>
+                            </div>
                             {'hint' in source && source.hint ? (
                               <span className="text-[10px] font-medium text-slate-400 leading-snug mt-0.5">
                                 {source.hint}
