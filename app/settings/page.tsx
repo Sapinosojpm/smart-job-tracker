@@ -58,11 +58,24 @@ export default function SettingsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
 
+  // Load cache on mount
   useEffect(() => {
-    fetchSettings();
+    const cachedSettingsStr = localStorage.getItem("jobTracker_cachedSettings");
+    if (cachedSettingsStr) {
+      try {
+        const parsed = JSON.parse(cachedSettingsStr);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+        setFetching(false);
+      } catch (e) {
+        console.error("Failed to parse cached settings", e);
+      }
+    }
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchSettings = async (showSkeleton = false) => {
+    if (showSkeleton) {
+      setFetching(true);
+    }
     try {
       const res = await fetch('/api/settings');
       if (res.ok) {
@@ -76,6 +89,7 @@ export default function SettingsPage() {
             }
           }
           setSettings((prev) => ({ ...prev, ...sanitized }));
+          localStorage.setItem("jobTracker_cachedSettings", JSON.stringify(sanitized));
         }
       }
     } catch (err) {
@@ -85,6 +99,11 @@ export default function SettingsPage() {
       setFetching(false);
     }
   };
+
+  useEffect(() => {
+    const cachedSettingsStr = localStorage.getItem("jobTracker_cachedSettings");
+    fetchSettings(!cachedSettingsStr);
+  }, []);
 
   const handleSave = async () => {
     const toastId = toast.loading('Saving credentials...', { position: "top-right" });
@@ -98,6 +117,9 @@ export default function SettingsPage() {
       });
 
       if (!res.ok) throw new Error('Failed to save');
+
+      // Update local storage cache
+      localStorage.setItem("jobTracker_cachedSettings", JSON.stringify(settings));
 
       toast.update(toastId, {
         render: 'Credentials updated successfully!',
@@ -129,7 +151,9 @@ export default function SettingsPage() {
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
-        setSettings((prev) => ({ ...prev, plan: 'FREE' }));
+        const updatedSettings = { ...settings, plan: 'FREE' as const };
+        setSettings(updatedSettings);
+        localStorage.setItem("jobTracker_cachedSettings", JSON.stringify(updatedSettings));
         setShowCancelModal(false);
       } else {
         throw new Error(data.error || 'Failed to cancel subscription');

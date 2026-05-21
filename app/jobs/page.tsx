@@ -66,23 +66,55 @@ export default function JobsPage() {
   const [isClearing, setIsClearing] = useState(false);
   const [updatedTime, setUpdatedTime] = useState('');
 
-  const fetchJobs = useCallback(async () => {
+  // Load cache on mount
+  useEffect(() => {
+    const cachedJobsStr = localStorage.getItem("jobTracker_cachedJobs");
+    const cachedSettingsStr = localStorage.getItem("jobTracker_cachedSettings");
+    if (cachedJobsStr && cachedSettingsStr) {
+      try {
+        setJobs(JSON.parse(cachedJobsStr));
+        const parsedSettings = JSON.parse(cachedSettingsStr);
+        setSettings(parsedSettings);
+        setUserPlan(parsedSettings.plan || 'FREE');
+        setLoading(false);
+      } catch (e) {
+        console.error("Failed to parse cached jobs or settings", e);
+      }
+    }
+  }, []);
+
+  const fetchJobs = useCallback(async (showSkeleton: any = false) => {
+    const shouldShow = showSkeleton === true;
     try {
-      setLoading(true);
-      const res = await fetch(`/api/jobs?filter=${filter}&search=${search}`);
-      const data = await res.json();
-      if (data.success) {
-        setJobs(data.data);
+      if (shouldShow) {
+        setLoading(true);
+      }
+      
+      const [jobsRes, settingsRes] = await Promise.all([
+        fetch(`/api/jobs?filter=${filter}&search=${search}`),
+        fetch('/api/settings')
+      ]);
+
+      const [jobsData, settingsData] = await Promise.all([
+        jobsRes.json(),
+        settingsRes.json()
+      ]);
+
+      if (jobsData.success) {
+        setJobs(jobsData.data);
+        if (filter === 'all' && search === '') {
+          localStorage.setItem("jobTracker_cachedJobs", JSON.stringify(jobsData.data));
+        }
       } else {
-        setError(data.error);
+        setError(jobsData.error);
       }
 
-      // Fetch user plan
-      const settingsRes = await fetch('/api/settings');
-      const settingsData = await settingsRes.json();
       if (settingsData.success) {
         setUserPlan(settingsData.data.plan || 'FREE');
         setSettings(settingsData.data);
+        if (filter === 'all' && search === '') {
+          localStorage.setItem("jobTracker_cachedSettings", JSON.stringify(settingsData.data));
+        }
       }
     } catch (err) {
       setError('Failed to fetch jobs. Check your connection.');
@@ -92,8 +124,13 @@ export default function JobsPage() {
   }, [filter, search]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    const cachedJobsStr = localStorage.getItem("jobTracker_cachedJobs");
+    const cachedSettingsStr = localStorage.getItem("jobTracker_cachedSettings");
+    const hasCache = !!(cachedJobsStr && cachedSettingsStr);
+    
+    const shouldShowSkeleton = !hasCache || filter !== 'all' || search !== '';
+    fetchJobs(shouldShowSkeleton);
+  }, [fetchJobs, filter, search]);
 
   useEffect(() => {
     setUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -291,7 +328,7 @@ export default function JobsPage() {
           <button
             suppressHydrationWarning
             type="button"
-            onClick={fetchJobs}
+            onClick={() => fetchJobs(true)}
             className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm shadow-md shadow-blue-600/25 hover:bg-blue-700 transition-colors"
           >
             Try again

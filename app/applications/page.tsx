@@ -50,16 +50,30 @@ export default function ApplicationsPage() {
   const [selectedAppForDelete, setSelectedAppForDelete] = useState<Application | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Load cache on mount
   useEffect(() => {
-    fetchApplications();
+    const cachedAppsStr = localStorage.getItem("jobTracker_cachedApplications");
+    if (cachedAppsStr) {
+      try {
+        setApplications(JSON.parse(cachedAppsStr));
+        setLoading(false);
+      } catch (e) {
+        console.error("Failed to parse cached applications", e);
+      }
+    }
   }, []);
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (showSkeleton: any = false) => {
+    const shouldShow = showSkeleton === true;
     try {
+      if (shouldShow) {
+        setLoading(true);
+      }
       const res = await fetch('/api/applications');
       const data = await res.json();
       if (data.success) {
         setApplications(data.data);
+        localStorage.setItem("jobTracker_cachedApplications", JSON.stringify(data.data));
       }
     } catch (err) {
       toast.error('Failed to load applications');
@@ -67,6 +81,11 @@ export default function ApplicationsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const cachedAppsStr = localStorage.getItem("jobTracker_cachedApplications");
+    fetchApplications(!cachedAppsStr);
+  }, []);
 
   const updateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);

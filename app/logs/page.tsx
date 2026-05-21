@@ -27,13 +27,30 @@ export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Load cache on mount
   useEffect(() => {
-    const fetchLogs = async () => {
+    const cachedLogsStr = localStorage.getItem("jobTracker_cachedLogs");
+    if (cachedLogsStr) {
       try {
+        setLogs(JSON.parse(cachedLogsStr));
+        setLoading(false);
+      } catch (e) {
+        console.error("Failed to parse cached logs", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchLogs = async (showSkeleton = false) => {
+      try {
+        if (showSkeleton) {
+          setLoading(true);
+        }
         const res = await fetch('/api/logs?limit=50');
         const data = await res.json();
         if (data.success) {
           setLogs(data.data || []);
+          localStorage.setItem("jobTracker_cachedLogs", JSON.stringify(data.data || []));
         }
       } catch (err) {
         console.error('Failed to fetch logs');
@@ -41,7 +58,9 @@ export default function LogsPage() {
         setLoading(false);
       }
     };
-    fetchLogs();
+    
+    const cachedLogsStr = localStorage.getItem("jobTracker_cachedLogs");
+    fetchLogs(!cachedLogsStr);
   }, []);
 
   if (loading) return (
