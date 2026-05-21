@@ -300,7 +300,7 @@ export default function ConfigModal({ isOpen, onClose, onSuccess }: ConfigModalP
                   <div className="grid grid-cols-1 gap-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                     {[
                       // ✅ WORKING from Vercel server IPs
-                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow — JSON APIs, always work' },
+                      { id: 'scrapeRemoteOK', label: 'Remote APIs (free)', hint: 'RemoteOK, Remotive, Arbeitnow, Himalayas, Jobicy — 5 JSON APIs' },
                       { id: 'scrapeWeWorkRemotely', label: 'We Work Remotely', hint: 'RSS feed — high quality remote-only jobs' },
                       { id: 'scrapeOnlineJobs', label: 'OnlineJobs.ph', hint: 'Philippines-focused direct remote hiring' },
                     ].map((source) => {

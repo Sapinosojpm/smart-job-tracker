@@ -581,28 +581,100 @@ export async function fetchOtta(query: string): Promise<ScrapedJob[]> {
   return jobs;
 }
 
+/** Himalayas.app — free public JSON API, no auth, no Cloudflare */
+export async function fetchHimalayasApi(query: string): Promise<ScrapedJob[]> {
+  const jobs: ScrapedJob[] = [];
+  try {
+    const { data } = await axios.get<{ jobs?: Record<string, unknown>[] }>(
+      'https://himalayas.app/jobs/api',
+      {
+        ...axiosConfig,
+        params: { q: query, limit: 50 },
+      },
+    );
+    for (const j of data.jobs || []) {
+      const title = String(j.title || '').trim();
+      const company = String((j.company as any)?.name || j.companyName || '').trim();
+      const link = String(j.applicationLink || j.url || '').trim();
+      if (!title || !link) continue;
+      if (!titleMatchesQuery(title, query)) continue;
+
+      const salaryMin = (j.salaryMin as number) || undefined;
+      const salaryMax = (j.salaryMax as number) || undefined;
+      let salary: string | undefined;
+      if (salaryMin || salaryMax) {
+        salary = [salaryMin ? `$${salaryMin.toLocaleString()}` : '', salaryMax ? `$${salaryMax.toLocaleString()}` : '']
+          .filter(Boolean).join(' - ') || undefined;
+      }
+
+      jobs.push({
+        title,
+        company: company || 'Himalayas Employer',
+        link,
+        source: 'Himalayas',
+        location: (j.locationRestrictions as string) || 'Remote',
+        salary,
+        description: typeof j.description === 'string' ? j.description.slice(0, 300) : undefined,
+      });
+    }
+    console.log(`[Scraper] Himalayas API: ${jobs.length} jobs`);
+  } catch (err) {
+    console.error('[Scraper] Himalayas API error:', err);
+  }
+  return jobs;
+}
+
+/** Jobicy.com — free remote jobs JSON API, no auth */
+export async function fetchJobicyApi(query: string): Promise<ScrapedJob[]> {
+  const jobs: ScrapedJob[] = [];
+  try {
+    const { data } = await axios.get<{ jobs?: Record<string, unknown>[] }>(
+      'https://jobicy.com/api/v2/remote-jobs',
+      {
+        ...axiosConfig,
+        params: { count: 50, tag: query },
+      },
+    );
+    for (const j of data.jobs || []) {
+      const title = String(j.jobTitle || '').trim();
+      const company = String(j.companyName || '').trim();
+      const link = String(j.url || '').trim();
+      if (!title || !company || !link) continue;
+      if (!titleMatchesQuery(title, query)) continue;
+
+      jobs.push({
+        title,
+        company,
+        link,
+        source: 'Jobicy',
+        location: (j.jobGeo as string) || 'Remote',
+        salary: (j.annualSalaryMin || j.annualSalaryMax)
+          ? `$${j.annualSalaryMin ?? '?'} - $${j.annualSalaryMax ?? '?'}`
+          : undefined,
+        description: typeof j.jobExcerpt === 'string' ? j.jobExcerpt : undefined,
+      });
+    }
+    console.log(`[Scraper] Jobicy API: ${jobs.length} jobs`);
+  } catch (err) {
+    console.error('[Scraper] Jobicy API error:', err);
+  }
+  return jobs;
+}
+
 /**
  * Sources confirmed working from Vercel server IPs (no Cloudflare/DataDome blocking):
  *   ✅ RemoteOK     — public JSON API, no auth
  *   ✅ Remotive     — public JSON API, no auth
  *   ✅ Arbeitnow    — public JSON API, no auth
+ *   ✅ Himalayas    — public JSON API, no auth (new)
+ *   ✅ Jobicy       — public JSON API, no auth (new)
  *   ✅ WeWorkRemotely — RSS feed (their JSON API returns 403 from Vercel)
  *   ✅ OnlineJobs.ph — HTML scrape, no bot protection
  *
  * Sources BLOCKED from Vercel IPs (Cloudflare/DataDome 403) — skip entirely:
- *   ❌ Wellfound        — DataDome bot protection → captcha
- *   ❌ Remote Rocketship — Cloudflare block → HTML 403
- *   ❌ DailyRemote      — Cloudflare challenge → HTML 403
- *   ❌ Otta             — Requires JS rendering
- *   ❌ Working Nomads   — RSS fails, HTML Cloudflare-blocked
- *   ❌ Jobspresso       — RSS fails, HTML Cloudflare-blocked
- *   ❌ Remote.co        — RSS fails, HTML Cloudflare-blocked
- *   ❌ NoDesk           — Cloudflare-blocked
- *   ❌ SkipTheDrive     — Cloudflare-blocked
- *
- * These blocked sources each wait 8s before failing.
- * Running 9 blocked × 8s = 72s → exceeds Vercel's 60s limit → 504.
- * Use the scrape-worker (local PC) for browser-based sources.
+ *   ❌ Wellfound, RemoteRocketship, DailyRemote, Otta, WorkingNomads,
+ *      Jobspresso, Remote.co, NoDesk, SkipTheDrive
+ *   Use the scrape-worker (local PC) for browser-based sources.
  */
 export async function collectFreeApiJobs(
   settings: ISettings,
@@ -610,11 +682,13 @@ export async function collectFreeApiJobs(
 ): Promise<ScrapedJob[]> {
   const tasks: Promise<ScrapedJob[]>[] = [];
 
-  // ✅ SAFE: Pure JSON/RSS APIs — always work from Vercel
+  // ✅ SAFE: Pure JSON APIs — always work from Vercel (5 sources)
   if (settings.scrapeRemoteOK) {
     tasks.push(fetchRemoteOKApi(searchQuery));
     tasks.push(fetchRemotiveApi(searchQuery));
     tasks.push(fetchArbeitnowApi(searchQuery));
+    tasks.push(fetchHimalayasApi(searchQuery));  // NEW ✅
+    tasks.push(fetchJobicyApi(searchQuery));      // NEW ✅
   }
 
   // ✅ SAFE: RSS feed works from Vercel (only their JSON API is blocked)
