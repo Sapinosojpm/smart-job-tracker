@@ -265,6 +265,8 @@ export default function Sidebar({
                   await import("@/utils/supabase/client");
                 const supabase = createClient();
                 await supabase.auth.signOut();
+                // Clear cached dashboard data to prevent cross-account leakage
+                localStorage.removeItem("jobTracker_cachedDashboard");
                 window.location.href = "/";
               }}
               suppressHydrationWarning={true}

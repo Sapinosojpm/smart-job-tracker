@@ -34,24 +34,55 @@ export default function DashboardPage() {
   const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
+    // 1. Try to load cached data from localStorage first for an instant layout render
+    const cachedDataStr = localStorage.getItem("jobTracker_cachedDashboard");
+    if (cachedDataStr) {
+      try {
+        const cachedData = JSON.parse(cachedDataStr);
+        if (cachedData && cachedData.stats && cachedData.settings) {
+          setStats(cachedData.stats);
+          setSettings(cachedData.settings);
+          setUser(cachedData.user);
+          setLoading(false); // Turn off loading skeleton instantly!
+        }
+      } catch (e) {
+        console.error("Failed to parse cached dashboard data", e);
+      }
+    }
+
     const fetchData = async () => {
       try {
         const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setUser(user);
-
-        // Fetch both stats and settings in one call
-        const dashRes = await fetch("/api/dashboard");
+        
+        // Fetch user and dashboard stats concurrently to remove the sequential request waterfall
+        const [userResult, dashRes] = await Promise.all([
+          supabase.auth.getUser(),
+          fetch("/api/dashboard")
+        ]);
+        
+        const fetchedUser = userResult.data.user;
         const dashData = await dashRes.json();
 
         if (dashData.success) {
-          setStats(dashData.data.stats);
-          setSettings(dashData.data.settings);
+          const freshStats = dashData.data.stats;
+          const freshSettings = dashData.data.settings;
+          
+          setStats(freshStats);
+          setSettings(freshSettings);
+          setUser(fetchedUser);
+          
+          // Save to localStorage for the next instant load
+          localStorage.setItem(
+            "jobTracker_cachedDashboard",
+            JSON.stringify({
+              stats: freshStats,
+              settings: freshSettings,
+              user: fetchedUser
+            })
+          );
         }
       } catch (err) {
-        console.error("Failed to fetch dashboard data");
+        console.error("Failed to fetch dashboard data", err);
       } finally {
         setLoading(false);
       }
