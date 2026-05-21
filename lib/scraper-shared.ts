@@ -52,39 +52,69 @@ export async function insertUniqueJobs(userId: string, jobs: ScrapedJob[]): Prom
   let duplicates = 0;
   const insertedJobs: Awaited<ReturnType<typeof prisma.job.create>>[] = [];
 
-  for (const job of jobs) {
-    try {
-      const existing = await prisma.job.findUnique({
-        where: { link_userId: { link: job.link, userId } },
-      });
+  if (jobs.length === 0) {
+    return { insertedCount, duplicates, insertedJobs };
+  }
 
-      if (existing) {
-        duplicates++;
-        continue;
+  // 1. Extract all job links
+  const links = jobs.map((job) => job.link).filter(Boolean);
+
+  // 2. Query all existing records in a single bulk operation
+  const existingRecords = await prisma.job.findMany({
+    where: {
+      userId,
+      link: { in: links },
+    },
+    select: {
+      link: true,
+    },
+  });
+
+  const existingLinksSet = new Set(existingRecords.map((r) => r.link));
+
+  // 3. Separate new jobs from duplicates and run inserts concurrently
+  const jobsToInsert = jobs.filter((job) => {
+    if (existingLinksSet.has(job.link)) {
+      duplicates++;
+      return false;
+    }
+    return true;
+  });
+
+  if (jobsToInsert.length > 0) {
+    const insertPromises = jobsToInsert.map(async (job) => {
+      try {
+        const scamCheck = detectScam(job.title, job.description || '');
+        const salaryData = parseSalary(job.salary || null);
+        const workMode = job.workMode || classifyWorkMode(job.title, job.location, job.description);
+
+        const newJob = await prisma.job.create({
+          data: {
+            ...job,
+            userId,
+            isNewListing: true,
+            isScam: scamCheck.isScam,
+            scamScore: scamCheck.score,
+            scamReason: scamCheck.reasons.join(', '),
+            salaryMin: salaryData.min,
+            salaryMax: salaryData.max,
+            currency: salaryData.currency,
+            workMode,
+          },
+        });
+        return newJob;
+      } catch (err) {
+        console.error('[DB] Concurrent insert error:', err);
+        return null;
       }
+    });
 
-      const scamCheck = detectScam(job.title, job.description || '');
-      const salaryData = parseSalary(job.salary || null);
-      const workMode = job.workMode || classifyWorkMode(job.title, job.location, job.description);
-
-      const newJob = await prisma.job.create({
-        data: {
-          ...job,
-          userId,
-          isNewListing: true,
-          isScam: scamCheck.isScam,
-          scamScore: scamCheck.score,
-          scamReason: scamCheck.reasons.join(', '),
-          salaryMin: salaryData.min,
-          salaryMax: salaryData.max,
-          currency: salaryData.currency,
-          workMode,
-        },
-      });
-      insertedJobs.push(newJob);
-      insertedCount++;
-    } catch (err) {
-      console.error('[DB] Insert error:', err);
+    const results = await Promise.all(insertPromises);
+    for (const newJob of results) {
+      if (newJob) {
+        insertedJobs.push(newJob);
+        insertedCount++;
+      }
     }
   }
 
