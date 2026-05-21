@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
       activeSources.push('RemoteOK');
       activeSources.push('Remotive');
       activeSources.push('Arbeitnow');
+      activeSources.push('Himalayas');
+      activeSources.push('Jobicy');
     }
 
     const { searchParams } = new URL(request.url);

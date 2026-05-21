@@ -35,6 +35,8 @@ export async function GET(request: Request) {
       activeSources.push('RemoteOK');
       activeSources.push('Remotive');
       activeSources.push('Arbeitnow');
+      activeSources.push('Himalayas');
+      activeSources.push('Jobicy');
     }
 
     const allowedWorkModes: string[] = [];
