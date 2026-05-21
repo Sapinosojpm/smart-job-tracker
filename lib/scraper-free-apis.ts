@@ -6,9 +6,12 @@ import type { ScrapedJob } from './scraper-shared';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
 
+// ⚠️ 8s timeout per request — Vercel limit is 60s total.
+// Blocked sources fail after 20s each, chaining into a 504.
+// Keep this low so fast APIs (RemoteOK/Remotive/Arbeitnow) always succeed.
 const axiosConfig = {
   headers: { 'User-Agent': UA, Accept: 'application/json,text/html' },
-  timeout: 20000,
+  timeout: 8000,
 };
 
 export function queryKeywordsFromSearch(query: string): string[] {
@@ -578,55 +581,69 @@ export async function fetchOtta(query: string): Promise<ScrapedJob[]> {
   return jobs;
 }
 
-/** Free JSON/RSS sources that work from Vercel (no browser, no proxy). */
+/**
+ * Sources confirmed working from Vercel server IPs (no Cloudflare/DataDome blocking):
+ *   ✅ RemoteOK     — public JSON API, no auth
+ *   ✅ Remotive     — public JSON API, no auth
+ *   ✅ Arbeitnow    — public JSON API, no auth
+ *   ✅ WeWorkRemotely — RSS feed (their JSON API returns 403 from Vercel)
+ *   ✅ OnlineJobs.ph — HTML scrape, no bot protection
+ *
+ * Sources BLOCKED from Vercel IPs (Cloudflare/DataDome 403) — skip entirely:
+ *   ❌ Wellfound        — DataDome bot protection → captcha
+ *   ❌ Remote Rocketship — Cloudflare block → HTML 403
+ *   ❌ DailyRemote      — Cloudflare challenge → HTML 403
+ *   ❌ Otta             — Requires JS rendering
+ *   ❌ Working Nomads   — RSS fails, HTML Cloudflare-blocked
+ *   ❌ Jobspresso       — RSS fails, HTML Cloudflare-blocked
+ *   ❌ Remote.co        — RSS fails, HTML Cloudflare-blocked
+ *   ❌ NoDesk           — Cloudflare-blocked
+ *   ❌ SkipTheDrive     — Cloudflare-blocked
+ *
+ * These blocked sources each wait 8s before failing.
+ * Running 9 blocked × 8s = 72s → exceeds Vercel's 60s limit → 504.
+ * Use the scrape-worker (local PC) for browser-based sources.
+ */
 export async function collectFreeApiJobs(
   settings: ISettings,
   searchQuery: string,
 ): Promise<ScrapedJob[]> {
   const tasks: Promise<ScrapedJob[]>[] = [];
 
-  // Replaced Indeed/JobStreet/LinkedIn with the 10 remote boards
-  if (settings.scrapeWeWorkRemotely) {
-    tasks.push(fetchWeWorkRemotely(searchQuery));
-  }
-  if (settings.scrapeWellfound) {
-    tasks.push(fetchWellfound(searchQuery));
-  }
-  if (settings.scrapeWorkingNomads) {
-    tasks.push(fetchWorkingNomads(searchQuery));
-  }
-  if (settings.scrapeRemoteCo) {
-    tasks.push(fetchRemoteCo(searchQuery));
-  }
-  if (settings.scrapeJobspresso) {
-    tasks.push(fetchJobspresso(searchQuery));
-  }
-  if (settings.scrapeNoDesk) {
-    tasks.push(fetchNoDesk(searchQuery));
-  }
-  if (settings.scrapeSkipTheDrive) {
-    tasks.push(fetchSkipTheDrive(searchQuery));
-  }
-  if (settings.scrapeRemoteRocketship) {
-    tasks.push(fetchRemoteRocketship(searchQuery));
-  }
-  if (settings.scrapeDailyRemote) {
-    tasks.push(fetchDailyRemote(searchQuery));
-  }
-  if (settings.scrapeOtta) {
-    tasks.push(fetchOtta(searchQuery));
-  }
-
-  // Kept RemoteOK & OnlineJobs.ph per instructions
+  // ✅ SAFE: Pure JSON/RSS APIs — always work from Vercel
   if (settings.scrapeRemoteOK) {
     tasks.push(fetchRemoteOKApi(searchQuery));
     tasks.push(fetchRemotiveApi(searchQuery));
     tasks.push(fetchArbeitnowApi(searchQuery));
   }
+
+  // ✅ SAFE: RSS feed works from Vercel (only their JSON API is blocked)
+  if (settings.scrapeWeWorkRemotely) {
+    tasks.push(fetchWeWorkRemotely(searchQuery));
+  }
+
+  // ✅ SAFE: HTML scrape, no bot protection
   if (settings.scrapeOnlineJobs !== false) {
     tasks.push(fetchOnlineJobs(searchQuery));
   }
 
-  const batches = await Promise.all(tasks);
-  return batches.flat();
+  // ❌ ALL BLOCKED FROM VERCEL — do not add these here.
+  // Wellfound, RemoteRocketship, DailyRemote, Otta, WorkingNomads,
+  // Jobspresso, Remote.co, NoDesk, SkipTheDrive — all return 403.
+  // Use the scrape-worker for these.
+
+  // 50s overall budget — Vercel limit is 60s, leave 10s for DB writes.
+  const budget = new Promise<ScrapedJob[]>((resolve) =>
+    setTimeout(() => {
+      console.warn('[Scraper] 50s budget reached — returning partial results.');
+      resolve([]);
+    }, 50000),
+  );
+
+  const batches = await Promise.race([
+    Promise.all(tasks),
+    budget.then(() => [[] as ScrapedJob[]]),
+  ]);
+
+  return (Array.isArray(batches[0]) ? batches.flat() : (batches as ScrapedJob[][])).flat();
 }
