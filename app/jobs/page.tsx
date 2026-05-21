@@ -188,6 +188,16 @@ export default function JobsPage() {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Updated {updatedTime || '--:--'}
             </span>
+            {settings && (
+              <>
+                <span className="text-slate-300 mx-1">/</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined
+                    ? `${Math.max(0, settings.scrapeLimit - (settings.todayScrapeCount ?? 0))} remaining today`
+                    : "Unlimited Scrapes"}
+                </span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-black tracking-tight text-slate-900">Job Board</h1>

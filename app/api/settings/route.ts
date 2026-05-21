@@ -7,8 +7,32 @@ export async function GET() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    
     const settings = await prisma.settings.findUnique({ where: { userId: user.id } });
-    return NextResponse.json({ success: true, data: settings });
+    
+    // Calculate daily scrape count and limit
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const todayScrapeCount = await prisma.job.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: twentyFourHoursAgo },
+      },
+    });
+
+    const isFree = !settings || settings.plan === 'FREE';
+
+    return NextResponse.json({ 
+      success: true, 
+      data: settings ? {
+        ...settings,
+        todayScrapeCount,
+        scrapeLimit: isFree ? 50 : null
+      } : {
+        plan: 'FREE',
+        todayScrapeCount,
+        scrapeLimit: 50
+      }
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
