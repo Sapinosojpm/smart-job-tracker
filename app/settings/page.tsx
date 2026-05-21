@@ -84,7 +84,7 @@ export default function SettingsPage() {
           // Sanitize data to avoid null values in controlled inputs
           const sanitized = { ...data.data };
           for (const key in sanitized) {
-            if (sanitized[key] === null) {
+            if (sanitized[key] === null && key !== 'scrapeLimit') {
               sanitized[key] = '';
             }
           }

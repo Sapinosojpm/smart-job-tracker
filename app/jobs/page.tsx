@@ -192,8 +192,8 @@ export default function JobsPage() {
               <>
                 <span className="text-slate-300 mx-1">/</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined
-                    ? `${Math.max(0, settings.scrapeLimit - (settings.todayScrapeCount ?? 0))} remaining today`
+                  {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
+                    ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} remaining today`
                     : "Unlimited Scrapes"}
                 </span>
               </>
@@ -211,7 +211,28 @@ export default function JobsPage() {
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Dynamic Scrapes Quota Badge */}
+          {settings && (
+            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm h-[48px]">
+              <div className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold ${
+                settings.scrapeLimit !== null && settings.scrapeLimit !== ''
+                  ? 'bg-amber-50 text-amber-500 border border-amber-100/50'
+                  : 'bg-blue-50 text-blue-500 border border-blue-100/50'
+              }`}>
+                <Zap size={14} className={settings.scrapeLimit !== null && settings.scrapeLimit !== '' ? "fill-amber-500/10" : "fill-blue-500/10"} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Scrapes Left</span>
+                <span className="text-xs font-extrabold leading-none text-slate-800">
+                  {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
+                    ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} / ${settings.scrapeLimit}`
+                    : "Unlimited"}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Main Action Group */}
           <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
             <ScrapeButton onSuccess={() => fetchJobs()} />
