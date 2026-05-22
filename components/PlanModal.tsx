@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Check, Loader2, ArrowRight, ArrowLeft, Star, Zap, Rocket, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 
 interface PlanModalProps {
   isOpen: boolean;
@@ -188,54 +188,9 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
                       intent: 'capture',
                     }}
                   >
-                    <PayPalButtons
-                      style={{
-                        layout: 'vertical',
-                        color: 'blue',
-                        shape: 'rect',
-                        label: 'pay'
-                      }}
-                      createOrder={async () => {
-                        try {
-                          const res = await fetch('/api/paypal/create-order', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ plan: selectedPlan }),
-                          });
-                          const data = await res.json();
-                          if (data.success && data.orderID) {
-                            return data.orderID;
-                          } else {
-                            throw new Error(data.error || 'Failed to initiate PayPal order');
-                          }
-                        } catch (err: any) {
-                          toast.error(err.message || 'PayPal initiation error');
-                          throw err;
-                        }
-                      }}
-                      onApprove={async (data) => {
-                        try {
-                          const res = await fetch('/api/paypal/capture-order', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orderID: data.orderID }),
-                          });
-                          const responseData = await res.json();
-                          if (responseData.success) {
-                            toast.success(`Success! Upgraded to ${selectedPlan === 'PRO' ? 'Pro' : 'Elite'} Plan.`);
-                            onClose();
-                            window.location.reload();
-                          } else {
-                            throw new Error(responseData.error || 'Failed to capture payment');
-                          }
-                        } catch (err: any) {
-                          toast.error(err.message || 'PayPal capture error');
-                        }
-                      }}
-                      onError={(err) => {
-                        console.error('[PAYPAL_BUTTON_ERROR]', err);
-                        toast.error('PayPal Transaction Error');
-                      }}
+                    <PayPalButtonInner 
+                      plan={selectedPlan || 'PRO'} 
+                      onClose={onClose} 
                     />
                   </PayPalScriptProvider>
                 ) : (
@@ -258,3 +213,87 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
     </div>
   );
 }
+
+function PayPalButtonInner({ 
+  plan, 
+  onClose 
+}: { 
+  plan: 'PRO' | 'TEAM'; 
+  onClose: () => void; 
+}) {
+  const [{ isPending, isRejected }] = usePayPalScriptReducer();
+
+  if (isRejected) {
+    return (
+      <div className="text-center py-4 px-3 bg-red-50 border border-red-100 rounded-xl">
+        <p className="text-xs font-bold text-red-600 mb-1">Failed to load PayPal</p>
+        <p className="text-[10px] text-red-500 leading-normal">
+          Please check that your Client ID in your `.env` or `.env.local` file is complete and valid. Standard PayPal client IDs are around 80 characters long.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-[150px] flex flex-col justify-center">
+      {isPending && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10 rounded-2xl">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="animate-spin w-6 h-6 text-blue-600" />
+            <span className="text-[11px] font-bold text-slate-500">Loading PayPal...</span>
+          </div>
+        </div>
+      )}
+      <PayPalButtons
+        style={{
+          layout: 'vertical',
+          color: 'blue',
+          shape: 'rect',
+          label: 'pay'
+        }}
+        createOrder={async () => {
+          try {
+            const res = await fetch('/api/paypal/create-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ plan: plan }),
+            });
+            const data = await res.json();
+            if (data.success && data.orderID) {
+              return data.orderID;
+            } else {
+              throw new Error(data.error || 'Failed to initiate PayPal order');
+            }
+          } catch (err: any) {
+            toast.error(err.message || 'PayPal initiation error');
+            throw err;
+          }
+        }}
+        onApprove={async (data) => {
+          try {
+            const res = await fetch('/api/paypal/capture-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderID: data.orderID }),
+            });
+            const responseData = await res.json();
+            if (responseData.success) {
+              toast.success(`Success! Upgraded to ${plan === 'PRO' ? 'Pro' : 'Elite'} Plan.`);
+              onClose();
+              window.location.reload();
+            } else {
+              throw new Error(responseData.error || 'Failed to capture payment');
+            }
+          } catch (err: any) {
+            toast.error(err.message || 'PayPal capture error');
+          }
+        }}
+        onError={(err) => {
+          console.error('[PAYPAL_BUTTON_ERROR]', err);
+          toast.error('PayPal Transaction Error');
+        }}
+      />
+    </div>
+  );
+}
+
