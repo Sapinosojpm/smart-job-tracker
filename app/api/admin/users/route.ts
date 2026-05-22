@@ -37,19 +37,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const planFilter = searchParams.get('plan');
-    const searchFilter = searchParams.get('search');
+    const searchFilter = searchParams.get('search')?.toLowerCase() || '';
 
     // Build query conditions
     const where: any = {};
     if (planFilter && ['FREE', 'PRO', 'TEAM'].includes(planFilter)) {
       where.plan = planFilter;
-    }
-    if (searchFilter) {
-      where.OR = [
-        { userId: { contains: searchFilter, mode: 'insensitive' } },
-        { scraperQuery: { contains: searchFilter, mode: 'insensitive' } },
-        { emailTo: { contains: searchFilter, mode: 'insensitive' } }
-      ];
     }
 
     const usersSettings = await prisma.settings.findMany({
@@ -59,8 +52,14 @@ export async function GET(request: Request) {
 
     const userIds = usersSettings.map(u => u.userId);
 
-    // Fetch aggregates for all these users in exactly 3 fast grouped queries
-    const [jobCounts, appCounts, logCounts] = await Promise.all([
+    interface AuthUser {
+      id: string;
+      email: string | null;
+      raw_user_meta_data: any;
+    }
+
+    // Fetch aggregates and auth details in parallel
+    const [jobCounts, appCounts, logCounts, authUsers] = await Promise.all([
       prisma.job.groupBy({
         by: ['userId'],
         where: { userId: { in: userIds } },
@@ -75,40 +74,71 @@ export async function GET(request: Request) {
         by: ['userId'],
         where: { userId: { in: userIds } },
         _count: { _all: true }
-      })
+      }),
+      prisma.$queryRaw<AuthUser[]>`
+        SELECT id::text, email, raw_user_meta_data FROM auth.users
+      `
     ]);
 
-    // Convert groups to easy lookup maps
+    // Convert groups and auth to easy lookup maps
     const jobCountMap = Object.fromEntries(jobCounts.map(g => [g.userId, g._count._all]));
     const appCountMap = Object.fromEntries(appCounts.map(g => [g.userId, g._count._all]));
     const logCountMap = Object.fromEntries(logCounts.map(g => [g.userId, g._count._all]));
+    
+    const authUserMap = Object.fromEntries(
+      authUsers.map((u) => [
+        u.id,
+        {
+          email: u.email || 'No email',
+          name: u.raw_user_meta_data?.full_name || u.raw_user_meta_data?.name || null
+        }
+      ])
+    );
 
-    const usersData = usersSettings.map((setting) => ({
-      id: setting.id,
-      userId: setting.userId,
-      plan: setting.plan,
-      scraperQuery: setting.scraperQuery,
-      keywordFilters: setting.keywordFilters,
-      emailTo: setting.emailTo,
-      scrapeWeWorkRemotely: setting.scrapeWeWorkRemotely,
-      scrapeWellfound: setting.scrapeWellfound,
-      scrapeWorkingNomads: setting.scrapeWorkingNomads,
-      scrapeRemoteCo: setting.scrapeRemoteCo,
-      scrapeJobspresso: setting.scrapeJobspresso,
-      scrapeNoDesk: setting.scrapeNoDesk,
-      scrapeSkipTheDrive: setting.scrapeSkipTheDrive,
-      scrapeRemoteRocketship: setting.scrapeRemoteRocketship,
-      scrapeDailyRemote: setting.scrapeDailyRemote,
-      scrapeOtta: setting.scrapeOtta,
-      scrapeOnlineJobs: setting.scrapeOnlineJobs,
-      scrapeUpwork: setting.scrapeUpwork,
-      scrapeRemoteOK: setting.scrapeRemoteOK,
-      createdAt: setting.createdAt,
-      updatedAt: setting.updatedAt,
-      jobCount: jobCountMap[setting.userId] || 0,
-      applicationCount: appCountMap[setting.userId] || 0,
-      logCount: logCountMap[setting.userId] || 0
-    }));
+    let usersData = usersSettings.map((setting) => {
+      const authUser = authUserMap[setting.userId];
+      return {
+        id: setting.id,
+        userId: setting.userId,
+        email: authUser?.email || 'No email',
+        name: authUser?.name || null,
+        plan: setting.plan,
+        scraperQuery: setting.scraperQuery,
+        keywordFilters: setting.keywordFilters,
+        emailTo: setting.emailTo,
+        scrapeWeWorkRemotely: setting.scrapeWeWorkRemotely,
+        scrapeWellfound: setting.scrapeWellfound,
+        scrapeWorkingNomads: setting.scrapeWorkingNomads,
+        scrapeRemoteCo: setting.scrapeRemoteCo,
+        scrapeJobspresso: setting.scrapeJobspresso,
+        scrapeNoDesk: setting.scrapeNoDesk,
+        scrapeSkipTheDrive: setting.scrapeSkipTheDrive,
+        scrapeRemoteRocketship: setting.scrapeRemoteRocketship,
+        scrapeDailyRemote: setting.scrapeDailyRemote,
+        scrapeOtta: setting.scrapeOtta,
+        scrapeOnlineJobs: setting.scrapeOnlineJobs,
+        scrapeUpwork: setting.scrapeUpwork,
+        scrapeRemoteOK: setting.scrapeRemoteOK,
+        createdAt: setting.createdAt,
+        updatedAt: setting.updatedAt,
+        jobCount: jobCountMap[setting.userId] || 0,
+        applicationCount: appCountMap[setting.userId] || 0,
+        logCount: logCountMap[setting.userId] || 0
+      };
+    });
+
+    // In-memory search filtering (includes email and name now!)
+    if (searchFilter) {
+      usersData = usersData.filter((u) => {
+        return (
+          u.userId.toLowerCase().includes(searchFilter) ||
+          (u.scraperQuery && u.scraperQuery.toLowerCase().includes(searchFilter)) ||
+          (u.emailTo && u.emailTo.toLowerCase().includes(searchFilter)) ||
+          (u.email && u.email.toLowerCase().includes(searchFilter)) ||
+          (u.name && u.name.toLowerCase().includes(searchFilter))
+        );
+      });
+    }
 
     return NextResponse.json({
       success: true,

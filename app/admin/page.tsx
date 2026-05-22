@@ -30,6 +30,8 @@ import {
 interface UserData {
   id: string;
   userId: string;
+  email: string;
+  name: string | null;
   plan: 'FREE' | 'PRO' | 'TEAM';
   scraperQuery: string | null;
   keywordFilters: string[];
@@ -107,6 +109,8 @@ export default function AdminDashboard() {
   } | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
 
+  const targetUser = confirmModal ? users.find(u => u.userId === confirmModal.userId) : null;
+
   const fetchAdminData = async () => {
     try {
       setLoading(true);
@@ -179,7 +183,9 @@ export default function AdminDashboard() {
       result = result.filter(u => 
         u.userId.toLowerCase().includes(searchLower) ||
         (u.scraperQuery && u.scraperQuery.toLowerCase().includes(searchLower)) ||
-        (u.emailTo && u.emailTo.toLowerCase().includes(searchLower))
+        (u.emailTo && u.emailTo.toLowerCase().includes(searchLower)) ||
+        (u.email && u.email.toLowerCase().includes(searchLower)) ||
+        (u.name && u.name.toLowerCase().includes(searchLower))
       );
     }
 
@@ -470,7 +476,7 @@ export default function AdminDashboard() {
               <div className="relative flex-1 sm:w-64">
                 <input
                   type="text"
-                  placeholder="Search user ID or email..."
+                  placeholder="Search name, email, or ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-blue-500 focus:bg-white text-sm font-semibold rounded-2xl pl-11 pr-4 py-3 outline-none transition-all placeholder:text-slate-400"
@@ -500,7 +506,7 @@ export default function AdminDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pl-4">User Settings ID</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pl-4">User Details</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Plan Tier</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Scraper Query</th>
                   <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Registered</th>
@@ -513,10 +519,26 @@ export default function AdminDashboard() {
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-5 font-bold text-sm text-slate-900 pl-4 max-w-[200px] truncate">
-                        <div className="flex flex-col">
-                          <span className="truncate" title={u.userId}>{u.userId}</span>
-                          <span className="text-[10px] font-semibold text-slate-400 mt-0.5">{u.emailTo || 'No Alert Email'}</span>
+                      <td className="py-5 pl-4 max-w-[250px]">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-sm text-slate-900 truncate" title={u.name || u.email}>
+                            {u.name || u.email}
+                          </span>
+                          {u.name && (
+                            <span className="text-xs text-slate-500 truncate" title={u.email}>
+                              {u.email}
+                            </span>
+                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            <span className="text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-100 px-1 rounded truncate max-w-[120px]" title={`User ID: ${u.userId}`}>
+                              {u.userId.slice(0, 8)}...
+                            </span>
+                            {u.emailTo && u.emailTo !== u.email && (
+                              <span className="text-[9px] font-semibold text-slate-400 bg-slate-50 border border-slate-100 px-1 rounded truncate max-w-[120px]" title={`Alert Email: ${u.emailTo}`}>
+                                Alert: {u.emailTo}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="py-5">
@@ -764,9 +786,17 @@ export default function AdminDashboard() {
 
             <div className="space-y-4 mb-8">
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 font-semibold space-y-2">
+                {targetUser && (
+                  <div className="flex justify-between">
+                    <span>User:</span>
+                    <span className="font-bold text-slate-900 truncate max-w-[180px]" title={targetUser.name || targetUser.email}>
+                      {targetUser.name || targetUser.email}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span>User Settings ID:</span>
-                  <span className="font-bold text-slate-900 truncate max-w-[180px]" title={confirmModal.userId}>
+                  <span>User ID:</span>
+                  <span className="font-mono text-[10px] text-slate-500 truncate max-w-[180px]" title={confirmModal.userId}>
                     {confirmModal.userId}
                   </span>
                 </div>
