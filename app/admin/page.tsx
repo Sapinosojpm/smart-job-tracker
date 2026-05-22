@@ -100,20 +100,24 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       setLoading(true);
-      const statsRes = await fetch('/api/admin/stats');
+      const [statsRes, usersRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users')
+      ]);
+
       const statsData = await statsRes.json();
+      const usersData = await usersRes.json();
       
       if (!statsRes.ok || !statsData.success) {
         throw new Error(statsData.error || 'Failed to fetch admin stats');
       }
       setStats(statsData.data);
 
-      const usersRes = await fetch('/api/admin/users');
-      const usersData = await usersRes.json();
-      if (usersRes.ok && usersData.success) {
-        setUsers(usersData.data);
-        setFilteredUsers(usersData.data);
+      if (!usersRes.ok || !usersData.success) {
+        throw new Error(usersData.error || 'Failed to fetch admin users');
       }
+      setUsers(usersData.data);
+      setFilteredUsers(usersData.data);
     } catch (err: any) {
       toast.error(err.message || 'Error loading dashboard data');
     } finally {

@@ -35,57 +35,92 @@ export async function GET() {
   }
 
   try {
-    // 1. User breakdown by Plan
-    const [totalUsers, freeUsers, proUsers, teamUsers] = await Promise.all([
-      prisma.settings.count(),
-      prisma.settings.count({ where: { plan: 'FREE' } }),
-      prisma.settings.count({ where: { plan: 'PRO' } }),
-      prisma.settings.count({ where: { plan: 'TEAM' } })
-    ]);
-
-    // 2. Jobs stats
-    const totalJobs = await prisma.job.count();
-
-    // Group jobs by source using performant DB-level aggregation (groupBy)
-    const sourceGroups = await prisma.job.groupBy({
-      by: ['source'],
-      _count: { _all: true }
-    });
-    const jobDistribution = sourceGroups.map(group => ({
-      source: (group.source || 'Unknown').toUpperCase(),
-      count: group._count._all
-    })).sort((a, b) => b.count - a.count);
-
-    // 3. Applications Stats
-    const totalApplications = await prisma.application.count();
-    const statusGroups = await prisma.application.groupBy({
-      by: ['status'],
-      _count: { _all: true }
-    });
-    const appDistribution = statusGroups.map(group => ({
-      status: (group.status || 'Applied').toUpperCase(),
-      count: group._count._all
-    }));
-
-    // 4. Scraper Logs aggregation & recent history
-    const [recentLogs, totalLogs, successfulLogs, failedLogs] = await Promise.all([
+    const [
+      planGroups,
+      totalJobs,
+      jobSourceGroups,
+      totalApplications,
+      appStatusGroups,
+      recentLogs,
+      logStatusGroups,
+      scraperMetrics
+    ] = await Promise.all([
+      // 1. User breakdown by Plan (groupBy)
+      prisma.settings.groupBy({
+        by: ['plan'],
+        _count: { _all: true }
+      }),
+      // 2. Total jobs count
+      prisma.job.count(),
+      // Jobs grouped by source
+      prisma.job.groupBy({
+        by: ['source'],
+        _count: { _all: true }
+      }),
+      // 3. Total applications count
+      prisma.application.count(),
+      // Applications grouped by status
+      prisma.application.groupBy({
+        by: ['status'],
+        _count: { _all: true }
+      }),
+      // 4. Recent scraper logs
       prisma.scraperLog.findMany({
         take: 10,
         orderBy: { startedAt: 'desc' }
       }),
-      prisma.scraperLog.count(),
-      prisma.scraperLog.count({ where: { status: 'SUCCESS' } }),
-      prisma.scraperLog.count({ where: { status: 'FAILED' } })
+      // Scraper logs status counts (groupBy)
+      prisma.scraperLog.groupBy({
+        by: ['status'],
+        _count: { _all: true }
+      }),
+      // Overall scraper log metrics
+      prisma.scraperLog.aggregate({
+        _sum: {
+          jobsFound: true,
+          jobsInserted: true,
+          jobsDuplicated: true
+        }
+      })
     ]);
 
-    // Aggregate overall scraper metrics
-    const scraperMetrics = await prisma.scraperLog.aggregate({
-      _sum: {
-        jobsFound: true,
-        jobsInserted: true,
-        jobsDuplicated: true
-      }
-    });
+    // Calculate user count metrics
+    let totalUsers = 0;
+    let freeUsers = 0;
+    let proUsers = 0;
+    let teamUsers = 0;
+
+    for (const group of planGroups) {
+      const count = group._count._all;
+      totalUsers += count;
+      if (group.plan === 'FREE') freeUsers = count;
+      else if (group.plan === 'PRO') proUsers = count;
+      else if (group.plan === 'TEAM') teamUsers = count;
+    }
+
+    // Process job distribution
+    const jobDistribution = jobSourceGroups.map(group => ({
+      source: (group.source || 'Unknown').toUpperCase(),
+      count: group._count._all
+    })).sort((a, b) => b.count - a.count);
+
+    // Process applications distribution
+    const appDistribution = appStatusGroups.map(group => ({
+      status: (group.status || 'Applied').toUpperCase(),
+      count: group._count._all
+    }));
+
+    // Process scraper logs metrics
+    let totalLogs = 0;
+    let successfulLogs = 0;
+    let failedLogs = 0;
+
+    for (const group of logStatusGroups) {
+      const count = group._count._all;
+      totalLogs += count;
+      if (group.status === 'SUCCESS') successfulLogs = count;
+      else if (group.status === 'FAILED') failedLogs = count;
+    }
 
     const successRate = totalLogs > 0 ? Math.round((successfulLogs / totalLogs) * 100) : 100;
 

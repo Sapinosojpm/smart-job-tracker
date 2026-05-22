@@ -117,6 +117,8 @@ model ScraperLog {
   jobsDuplicated Int       @default(0)
   error          String?
   source         String?
+
+  @@index([userId])
 }
 
 model Testimonial {
