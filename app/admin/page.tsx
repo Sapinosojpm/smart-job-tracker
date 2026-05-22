@@ -100,6 +100,12 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    userId: string;
+    currentPlan: 'FREE' | 'PRO' | 'TEAM';
+    targetPlan: 'FREE' | 'PRO' | 'TEAM';
+  } | null>(null);
+  const [confirmInput, setConfirmInput] = useState('');
 
   const fetchAdminData = async () => {
     try {
@@ -553,7 +559,7 @@ export default function AdminDashboard() {
                           <div className="flex gap-2 justify-end">
                             {u.plan !== 'FREE' && (
                               <button
-                                onClick={() => handleUpdatePlan(u.userId, 'FREE')}
+                                onClick={() => setConfirmModal({ userId: u.userId, currentPlan: u.plan, targetPlan: 'FREE' })}
                                 className="px-3 py-1.5 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all"
                               >
                                 FREE
@@ -561,7 +567,7 @@ export default function AdminDashboard() {
                             )}
                             {u.plan !== 'PRO' && (
                               <button
-                                onClick={() => handleUpdatePlan(u.userId, 'PRO')}
+                                onClick={() => setConfirmModal({ userId: u.userId, currentPlan: u.plan, targetPlan: 'PRO' })}
                                 className="px-3 py-1.5 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 rounded-lg transition-all"
                               >
                                 PRO
@@ -569,7 +575,7 @@ export default function AdminDashboard() {
                             )}
                             {u.plan !== 'TEAM' && (
                               <button
-                                onClick={() => handleUpdatePlan(u.userId, 'TEAM')}
+                                onClick={() => setConfirmModal({ userId: u.userId, currentPlan: u.plan, targetPlan: 'TEAM' })}
                                 className="px-3 py-1.5 text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 rounded-lg transition-all"
                               >
                                 ELITE
@@ -737,6 +743,87 @@ export default function AdminDashboard() {
               <p className="text-slate-500 text-xs font-semibold leading-relaxed">
                 The scraping scheduler is running cleanly. Platform API latency is averaging <span className="text-blue-600 font-bold">{stats?.system?.latency || '24ms'}</span>. All active index nodes are healthy.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white border border-slate-100 rounded-[32px] max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <Shield size={24} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Confirm Plan Change</h3>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Administrative override</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 font-semibold space-y-2">
+                <div className="flex justify-between">
+                  <span>User Settings ID:</span>
+                  <span className="font-bold text-slate-900 truncate max-w-[180px]" title={confirmModal.userId}>
+                    {confirmModal.userId}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Change plan:</span>
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <span className="px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md text-[10px]">
+                      {confirmModal.currentPlan === 'TEAM' ? 'ELITE' : confirmModal.currentPlan}
+                    </span>
+                    <span className="text-slate-400">→</span>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] ${
+                      confirmModal.targetPlan === 'TEAM' ? 'bg-indigo-100 text-indigo-700' :
+                      confirmModal.targetPlan === 'PRO' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {confirmModal.targetPlan === 'TEAM' ? 'ELITE' : confirmModal.targetPlan}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Type <span className="text-slate-950 font-black">CONFIRM</span> to authorize
+                </label>
+                <input
+                  type="text"
+                  placeholder="CONFIRM"
+                  value={confirmInput}
+                  onChange={(e) => setConfirmInput(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-blue-500 focus:bg-white text-sm font-bold rounded-2xl px-4 py-3 outline-none transition-all placeholder:text-slate-300"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setConfirmModal(null);
+                  setConfirmInput('');
+                }}
+                className="flex-1 py-3 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={confirmInput.toUpperCase() !== 'CONFIRM'}
+                onClick={async () => {
+                  if (confirmInput.toUpperCase() !== 'CONFIRM') return;
+                  const { userId, targetPlan } = confirmModal;
+                  setConfirmModal(null);
+                  setConfirmInput('');
+                  await handleUpdatePlan(userId, targetPlan);
+                }}
+                className="flex-1 py-3 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-500/10"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
