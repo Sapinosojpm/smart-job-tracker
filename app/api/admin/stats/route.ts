@@ -43,7 +43,9 @@ export async function GET() {
       appStatusGroups,
       recentLogs,
       logStatusGroups,
-      scraperMetrics
+      scraperMetrics,
+      totalViews,
+      uniqueVisitorsResult
     ] = await Promise.all([
       // 1. User breakdown by Plan (groupBy)
       prisma.settings.groupBy({
@@ -81,8 +83,34 @@ export async function GET() {
           jobsInserted: true,
           jobsDuplicated: true
         }
+      }),
+      // 5. Total page views count (excluding admin paths)
+      prisma.pageView.count({
+        where: {
+          NOT: {
+            path: {
+              startsWith: '/admin'
+            }
+          }
+        }
+      }),
+      // 6. Distinct visitorIds (excluding admin paths)
+      prisma.pageView.findMany({
+        distinct: ['visitorId'],
+        select: {
+          visitorId: true
+        },
+        where: {
+          NOT: {
+            path: {
+              startsWith: '/admin'
+            }
+          }
+        }
       })
     ]);
+
+    const uniqueVisitors = uniqueVisitorsResult.length;
 
     // Calculate user count metrics
     let totalUsers = 0;
@@ -150,6 +178,10 @@ export async function GET() {
           jobsInserted: scraperMetrics._sum.jobsInserted || 0,
           jobsDuplicated: scraperMetrics._sum.jobsDuplicated || 0,
           recentLogs
+        },
+        visitors: {
+          totalViews,
+          unique: uniqueVisitors
         },
         system: {
           dbHealth: 'Healthy',

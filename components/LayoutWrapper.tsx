@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { Menu } from "lucide-react";
@@ -17,11 +17,33 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!pathname) return;
+
+    // Get or generate a persistent unique visitor ID
+    let visitorId = localStorage.getItem('jobscoutai_visitor_id');
+    if (!visitorId) {
+      visitorId = typeof crypto?.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('jobscoutai_visitor_id', visitorId);
+    }
+
+    // Send the tracking event
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorId, path: pathname }),
+    }).catch((err) => console.error('Failed to track page view:', err));
+  }, [pathname]);
+
   const isPublicPage =
     !pathname ||
     pathname === "/" ||
     pathname === "/login" ||
     pathname.startsWith("/auth");
+
 
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">

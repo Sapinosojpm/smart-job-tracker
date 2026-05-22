@@ -78,6 +78,10 @@ interface AdminStats {
     jobsDuplicated: number;
     recentLogs: any[];
   };
+  visitors?: {
+    totalViews: number;
+    unique: number;
+  };
   system: {
     dbHealth: string;
     apiVersion: string;
@@ -226,6 +230,13 @@ export default function AdminDashboard() {
       color: 'blue'
     },
     {
+      label: 'Website Visitors',
+      value: stats?.visitors?.unique || 0,
+      subtext: `${stats?.visitors?.totalViews || 0} total views`,
+      icon: Globe,
+      color: 'pink'
+    },
+    {
       label: 'Scraped Jobs',
       value: stats?.jobs?.total || 0,
       subtext: `${stats?.scraper?.jobsFound || 0} total listings found`,
@@ -313,7 +324,7 @@ export default function AdminDashboard() {
       {activeTab === 'overview' && (
         <div className="space-y-12">
           {/* STATS CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {statCards.map((stat) => (
               <div key={stat.label} className="bg-white border border-slate-100 rounded-[32px] p-8 hover:shadow-xl hover:shadow-blue-900/5 transition-all group">
                 <div className="flex items-center justify-between mb-6">

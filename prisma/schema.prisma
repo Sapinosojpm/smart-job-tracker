@@ -130,3 +130,14 @@ model Testimonial {
   rating    Int      @default(5)
   createdAt DateTime @default(now())
 }
+
+model PageView {
+  id        String   @id @default(cuid())
+  visitorId String
+  path      String
+  createdAt DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([createdAt])
+}
+
