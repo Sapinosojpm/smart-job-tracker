@@ -276,13 +276,17 @@ function HeroSection({
                       : "col-span-2 md:col-span-1"
                 }`}
               >
-                <div className="font-display text-[1.6rem] md:text-[2rem] font-extrabold text-ink leading-none">
-                  {mounted
-                    ? Intl.NumberFormat("en-US", {
+                <div className="font-display text-[1.6rem] md:text-[2rem] font-extrabold text-ink leading-none h-8 flex items-center justify-center">
+                  {!mounted || !stats ? (
+                    <span className="inline-block w-16 h-6 bg-slate-200/80 animate-pulse rounded-md" />
+                  ) : (
+                    <>
+                      {Intl.NumberFormat("en-US", {
                         notation: "compact",
-                      }).format(s.value || 0)
-                    : "0"}
-                  {s.suffix}
+                      }).format(s.value || 0)}
+                      {s.suffix}
+                    </>
+                  )}
                 </div>
                 <div className="text-[10px] md:text-[11px] font-bold text-ink-4 tracking-wider uppercase mt-2">
                   {s.label}
@@ -1183,11 +1187,7 @@ function AuthModal({
 function LandingContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [defaultSignUp, setDefaultSignUp] = useState(false);
-  const [stats, setStats] = useState({
-    totalJobs: 0,
-    activeUsers: 0,
-    successMatches: 0,
-  });
+  const [stats, setStats] = useState<any>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {

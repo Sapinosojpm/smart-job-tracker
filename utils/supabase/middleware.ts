@@ -2,6 +2,19 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // 1. Bypass middleware auth checks for all API routes and the auth callback.
+  // API endpoints handle their own session validation internally and return clean 401s,
+  // while the callback route handles code-to-session exchange on its own.
+  // This bypass prevents double-checking auth on protected APIs and removes blocking calls
+  // to Supabase auth APIs for public endpoints like stats.
+  if (pathname.startsWith('/api') || pathname.startsWith('/auth/callback')) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
