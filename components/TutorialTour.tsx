@@ -17,44 +17,44 @@ interface TutorialTourProps {
 
 const TOUR_STEPS: Step[] = [
   {
-    title: "👋 Maligayang Pagdating sa JobScoutAI!",
-    description: "Ito ang iyong intelligent dashboard para sa mabilisang paghahanap ng remote jobs. Bibigyan ka namin ng maikling gabay kung paano ito gamitin sa loob ng 1 minuto.",
+    title: "👋 Welcome to JobScoutAI!",
+    description: "This is your intelligent dashboard for searching remote jobs quickly. We'll give you a quick 1-minute guide on how to use it.",
     selector: "",
     position: 'center',
   },
   {
-    title: "🔍 Search Now (Maghanap ng Trabaho)",
-    description: "I-click ito para utusan ang ating AI crawlers na maghanap ng pinakabagong trabaho sa We Work Remotely, Wellfound, Remote.co, at iba pa. Awtomatiko nitong ia-update ang iyong board.",
+    title: "🔍 Search Now",
+    description: "Click this to tell our AI crawlers to search for the latest jobs on We Work Remotely, Wellfound, Remote.co, and more. It will automatically update your board.",
     selector: "#tour-search-btn-wrapper",
     position: 'bottom',
   },
   {
-    title: "⚡ Searches Left (Natitirang Search Quota)",
-    description: "Dito mo makikita kung ilan pang searches ang natitira sa iyong account ngayong araw. Sa Free tier ay mayroon kang 50 searches kada araw. Mag-upgrade sa PRO para sa Unlimited searches!",
+    title: "⚡ Searches Left",
+    description: "Here you can see how many searches are left for your account today. On the Free tier, you get 50 searches per day. Upgrade to PRO for unlimited searches!",
     selector: "#tour-quota-badge",
     position: 'bottom',
   },
   {
-    title: "🎯 Filters (Pagsasala ng Jobs)",
-    description: "Salain ang iyong listahan! I-click ang 'ALL' para makita lahat, 'NEW' para sa mga bagong listings na hindi mo pa nababasa, at 'APPLIED' para sa mga trabahong inapplyan mo na.",
+    title: "🎯 Filters",
+    description: "Filter your list! Click 'ALL' to see everything, 'NEW' for new listings you haven't read yet, and 'APPLIED' for jobs you have marked as applied.",
     selector: "#tour-filters",
     position: 'top',
   },
   {
-    title: "⌨️ Search Bar (Pag-filter gamit ang Keywords)",
-    description: "Naghahanap ng partikular na tech stack o posisyon? Mag-type ng keywords tulad ng 'React', 'Node', o pangalan ng kumpanya para agad salain ang listahan sa screen.",
+    title: "⌨️ Search Bar (Keyword Filter)",
+    description: "Looking for a specific tech stack or position? Type keywords like 'React', 'Node', or a company name to instantly filter the list on the screen.",
     selector: "#tour-search-bar",
     position: 'bottom',
   },
   {
-    title: "💼 Job Actions (Aksyon sa Trabaho)",
-    description: "Sa bawat job card, maaari mong i-click ang check circle icon para i-mark ito bilang 'Applied' (para ma-track ang progress mo), o i-click ang 'Apply' para pumunta sa orihinal na job posting website.",
+    title: "💼 Job Actions",
+    description: "On each job card, you can click the check circle icon to mark it as 'Applied' (to track your progress) or click 'Apply' to go to the original job posting website.",
     selector: "#tour-job-card",
     position: 'top',
   },
   {
-    title: "⚙️ Iba pang Control Buttons",
-    description: "Dito mo naman pwedeng i-configure ang settings ng job notifications mo, i-download ang iyong listahan bilang CSV, o tuluyang linisin (clear) ang iyong board.",
+    title: "⚙️ Other Control Buttons",
+    description: "Here you can configure your job notification settings, download your list as a CSV, or clear your job board.",
     selector: "#tour-secondary-actions",
     position: 'bottom',
   }
@@ -236,7 +236,7 @@ export default function TutorialTour({ isOpen, onClose }: TutorialTourProps) {
               <Sparkles size={16} className="fill-blue-600/10" />
             </div>
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Gabay sa Paggamit
+              User Guide
             </span>
           </div>
           <button 
@@ -278,7 +278,7 @@ export default function TutorialTour({ isOpen, onClose }: TutorialTourProps) {
               <button
                 onClick={handleBack}
                 className="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-800 transition-colors"
-                title="Bumalik"
+                title="Back"
               >
                 <ArrowLeft size={16} />
               </button>
@@ -289,7 +289,7 @@ export default function TutorialTour({ isOpen, onClose }: TutorialTourProps) {
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
             >
               <span>
-                {currentStep === TOUR_STEPS.length - 1 ? 'Tapusin' : 'Susunod'}
+                {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
               </span>
               {currentStep < TOUR_STEPS.length - 1 && <ArrowRight size={14} />}
             </button>
