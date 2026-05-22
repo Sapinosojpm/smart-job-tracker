@@ -17,7 +17,8 @@ import {
   Zap,
   Download,
   Briefcase,
-  Lock
+  Lock,
+  HelpCircle
 } from 'lucide-react';
 import ScrapeButton from '@/components/ScrapeButton';
 import ApplyModal from '@/components/ApplyModal';
@@ -25,6 +26,7 @@ import DeleteModal from '@/components/DeleteModal';
 import ConfigModal from '@/components/ConfigModal';
 import PlanModal from '@/components/PlanModal';
 import CacheBanner from '@/components/CacheBanner';
+import TutorialTour from '@/components/TutorialTour';
 import { toast } from 'react-toastify';
 
 interface Job {
@@ -56,6 +58,7 @@ export default function JobsPage() {
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'TEAM'>('FREE');
   const [settings, setSettings] = useState<any>(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   // Modals State
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -80,6 +83,17 @@ export default function JobsPage() {
       } catch (e) {
         console.error("Failed to parse cached jobs or settings", e);
       }
+    }
+  }, []);
+
+  // Check if onboarding tour is completed
+  useEffect(() => {
+    const completed = localStorage.getItem('jobscoutai_tour_completed');
+    if (!completed) {
+      const timer = setTimeout(() => {
+        setShowTour(true);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -194,7 +208,7 @@ export default function JobsPage() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
                     ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} remaining today`
-                    : "Unlimited Scrapes"}
+                    : "Unlimited Searches"}
                 </span>
               </>
             )}
@@ -214,7 +228,7 @@ export default function JobsPage() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Dynamic Scrapes Quota Badge */}
           {settings && (
-            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm h-[48px]">
+            <div id="tour-quota-badge" className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm h-[48px]">
               <div className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold ${
                 settings.scrapeLimit !== null && settings.scrapeLimit !== ''
                   ? 'bg-amber-50 text-amber-500 border border-amber-100/50'
@@ -223,7 +237,7 @@ export default function JobsPage() {
                 <Zap size={14} className={settings.scrapeLimit !== null && settings.scrapeLimit !== '' ? "fill-amber-500/10" : "fill-blue-500/10"} />
               </div>
               <div className="flex flex-col">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Scrapes Left</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Searches Left</span>
                 <span className="text-xs font-extrabold leading-none text-slate-800">
                   {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
                     ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} / ${settings.scrapeLimit}`
@@ -234,7 +248,7 @@ export default function JobsPage() {
           )}
 
           {/* Main Action Group */}
-          <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
+          <div id="tour-search-btn-wrapper" className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
             <ScrapeButton onSuccess={() => fetchJobs()} />
             <div className="w-px h-6 bg-slate-200 mx-1" />
             <button
@@ -251,7 +265,15 @@ export default function JobsPage() {
           </div>
 
           {/* Secondary Actions */}
-          <div className="flex items-center gap-1.5 ml-2">
+          <div id="tour-secondary-actions" className="flex items-center gap-1.5 ml-2">
+            <button
+              suppressHydrationWarning
+              onClick={() => setShowTour(true)}
+              className="p-3 rounded-2xl text-blue-600 hover:bg-blue-50 transition-all"
+              title="Guide Tour"
+            >
+              <HelpCircle size={20} />
+            </button>
             <button
               suppressHydrationWarning
               onClick={() => setShowConfigModal(true)}
@@ -291,7 +313,7 @@ export default function JobsPage() {
 
       {/* --- MODERN SEARCH & FILTERS --- */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-10 w-full">
-        <div className="relative flex-grow group">
+        <div id="tour-search-bar" className="relative flex-grow group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
           <input
             suppressHydrationWarning
@@ -303,7 +325,7 @@ export default function JobsPage() {
           />
         </div>
         
-        <div className="flex items-center p-1.5 bg-slate-100/80 backdrop-blur-sm rounded-[20px] border border-slate-200 shrink-0">
+        <div id="tour-filters" className="flex items-center p-1.5 bg-slate-100/80 backdrop-blur-sm rounded-[20px] border border-slate-200 shrink-0">
           {['all', 'new', 'applied'].map((f) => (
             <button
               suppressHydrationWarning
@@ -379,7 +401,7 @@ export default function JobsPage() {
           
           <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Board is currently empty</h3>
           <p className="text-slate-500 text-base max-w-sm leading-relaxed mb-10">
-            Start your hunt by running a fresh scrape. We'll find the best {settings?.scraperQuery || 'React'} jobs across the web for you.
+            Start your hunt by running a fresh search. We'll find the best {settings?.scraperQuery || 'React'} jobs across the web for you.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -399,9 +421,10 @@ export default function JobsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-          {jobs.map((job) => (
+          {jobs.map((job, index) => (
             <div
               key={job.id}
+              id={index === 0 ? 'tour-job-card' : undefined}
               className="card-glow group relative flex h-full flex-col rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-shadow duration-300 hover:border-blue-200/80 hover:shadow-md"
             >
               {job.isNewListing && (
@@ -602,6 +625,11 @@ export default function JobsPage() {
 
       {/* Cache Promotion Banner */}
       <CacheBanner />
+
+      <TutorialTour 
+        isOpen={showTour} 
+        onClose={() => setShowTour(false)} 
+      />
     </div>
   );
 }

@@ -63,7 +63,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
   const handleScrape = async (shouldClear: boolean = false) => {
     setShowConfirmModal(false);
     setState('loading');
-    const toastId = toast.loading(shouldClear ? '🧹 Clearing board & scraping...' : '🔍 Scraping job boards...', { position: "top-right" });
+    const toastId = toast.loading(shouldClear ? '🧹 Clearing board & searching...' : '🔍 Searching job boards...', { position: "top-right" });
 
     try {
       if (shouldClear) {
@@ -103,7 +103,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
         setState('idle');
         setLimitData({ resetTime: data.resetTime });
         toast.update(toastId, {
-          render: '🚫 Daily scrape limit reached (50 jobs/day on FREE). Upgrade to PRO for unlimited scraping.',
+          render: '🚫 Daily search limit reached (50 jobs/day on FREE). Upgrade to PRO for unlimited searches.',
           type: 'warning',
           isLoading: false,
           autoClose: 8000,
@@ -113,7 +113,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
       }
     } catch (err: any) {
       setState('error');
-      const message = err?.message || 'Scrape failed. Check your internet connection.';
+      const message = err?.message || 'Search failed. Check your internet connection.';
       toast.update(toastId, {
         render: `❌ ${message}`,
         type: "error",
@@ -133,8 +133,8 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
   const config = isLimitReached
     ? { bg: 'bg-amber-500', icon: <Clock size={16} />, label: timeLeft ? `Resets in ${timeLeft}` : 'Limit Reached' }
     : {
-        idle: { bg: 'bg-blue-600', icon: <RefreshCw size={16} />, label: 'Scrape now' },
-        loading: { bg: 'bg-blue-800', icon: <RefreshCw size={16} className="animate-spin" />, label: 'Scraping…' },
+        idle: { bg: 'bg-blue-600', icon: <RefreshCw size={16} />, label: 'Search now' },
+        loading: { bg: 'bg-blue-800', icon: <RefreshCw size={16} className="animate-spin" />, label: 'Searching…' },
         success: { bg: 'bg-green-600', icon: <CheckCircle2 size={16} />, label: 'Done!' },
         error: { bg: 'bg-red-600', icon: <AlertCircle size={16} />, label: 'Failed' },
       }[state];
@@ -158,7 +158,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
             suppressHydrationWarning
             onClick={() => setShowPlanModal(true)}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-600/30 active:scale-95 transition-all"
-            title="Upgrade to continue scraping"
+            title="Upgrade to continue searching"
           >
             <Zap size={13} className="fill-white" />
             Upgrade
@@ -187,7 +187,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
                  </div>
                  <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3">Fresh start?</h3>
                  <p className="text-slate-500 text-[13px] font-medium leading-relaxed mb-10 px-4">
-                    Do you want to clear your current board before scraping new jobs, or just add them to your existing list?
+                    Do you want to clear your current board before searching new jobs, or just add them to your existing list?
                  </p>
 
                  <div className="space-y-3">
@@ -196,7 +196,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
                       className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                     >
                        <RefreshCw size={18} />
-                       Clear & Scrape New
+                       Clear & Search New
                     </button>
                     <button 
                       onClick={() => handleScrape(false)}
@@ -242,7 +242,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
             {/* Body */}
             <div className="p-8 text-center">
               <div className="mb-8">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Next Scrape Available In</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Next Search Available In</div>
                 <div className="text-4xl font-black text-slate-800 tracking-tighter tabular-nums">
                   {timeLeft || '--h --m --s'}
                 </div>
@@ -254,7 +254,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
                   className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95 group"
                 >
                   <ShieldCheck size={20} />
-                  <span>Upgrade to PRO — Unlimited Scraping</span>
+                  <span>Upgrade to PRO — Unlimited Searches</span>
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
                 
@@ -270,7 +270,7 @@ export default function ScrapeButton({ onSuccess }: ScrapeButtonProps) {
             {/* Footer */}
             <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PRO users get unlimited scraping + priority sources</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PRO users get unlimited searches + priority sources</p>
             </div>
           </div>
         </div>
