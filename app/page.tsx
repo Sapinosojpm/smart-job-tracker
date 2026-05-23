@@ -273,13 +273,195 @@ function KineticGrid({ mouseX, mouseY, isHovered }: KineticGridProps) {
   );
 }
 
+interface DraggableBadgeProps {
+  platform: typeof floatingPlatforms[0];
+  translateX: number;
+  translateY: number;
+  isHovered: boolean;
+}
+
+function DraggableBadge({ platform, translateX, translateY, isHovered }: DraggableBadgeProps) {
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  
+  const posRef = useRef({ x: 0, y: 0 });
+  const velRef = useRef({ x: 0, y: 0 });
+  const lastMouseRef = useRef({ x: 0, y: 0, time: 0 });
+  const animFrameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    posRef.current = offset;
+  }, [offset]);
+
+  const startInertia = () => {
+    const updatePhysics = () => {
+      if (isDraggingRef.current) return;
+
+      let vx = velRef.current.x;
+      let vy = velRef.current.y;
+
+      vx *= 0.95;
+      vy *= 0.95;
+
+      velRef.current.x = vx;
+      velRef.current.y = vy;
+
+      let nextX = posRef.current.x + vx;
+      let nextY = posRef.current.y + vy;
+
+      if (badgeRef.current) {
+        const rect = badgeRef.current.getBoundingClientRect();
+        
+        if (rect.left + vx < 10) {
+          nextX = posRef.current.x - (rect.left - 10);
+          velRef.current.x = -vx * 0.6;
+        } else if (rect.right + vx > window.innerWidth - 10) {
+          nextX = posRef.current.x + (window.innerWidth - 10 - rect.right);
+          velRef.current.x = -vx * 0.6;
+        }
+
+        if (rect.top + vy < 10) {
+          nextY = posRef.current.y - (rect.top - 10);
+          velRef.current.y = -vy * 0.6;
+        } else if (rect.bottom + vy > window.innerHeight - 10) {
+          nextY = posRef.current.y + (window.innerHeight - 10 - rect.bottom);
+          velRef.current.y = -vy * 0.6;
+        }
+      }
+
+      setOffset({ x: nextX, y: nextY });
+
+      if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) {
+        animFrameRef.current = requestAnimationFrame(updatePhysics);
+      } else {
+        animFrameRef.current = null;
+      }
+    };
+
+    if (animFrameRef.current === null) {
+      animFrameRef.current = requestAnimationFrame(updatePhysics);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    initDrag(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      initDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const initDrag = (clientX: number, clientY: number) => {
+    isDraggingRef.current = true;
+    velRef.current = { x: 0, y: 0 };
+    lastMouseRef.current = { x: clientX, y: clientY, time: Date.now() };
+
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      onDragMove(moveEvent.clientX, moveEvent.clientY);
+    };
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.touches.length === 1) {
+        onDragMove(moveEvent.touches[0].clientX, moveEvent.touches[0].clientY);
+      }
+    };
+
+    const handleDragEnd = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleDragEnd);
+      startInertia();
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleDragEnd);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchend", handleDragEnd);
+  };
+
+  const onDragMove = (clientX: number, clientY: number) => {
+    if (!isDraggingRef.current) return;
+
+    const now = Date.now();
+    const dt = now - lastMouseRef.current.time || 1;
+    
+    const dx = clientX - lastMouseRef.current.x;
+    const dy = clientY - lastMouseRef.current.y;
+
+    const instVx = (dx / dt) * 16;
+    const instVy = (dy / dt) * 16;
+
+    velRef.current.x = velRef.current.x * 0.4 + instVx * 0.6;
+    velRef.current.y = velRef.current.y * 0.4 + instVy * 0.6;
+
+    setOffset((prev) => ({
+      x: prev.x + dx,
+      y: prev.y + dy,
+    }));
+
+    lastMouseRef.current = { x: clientX, y: clientY, time: now };
+  };
+
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div
+      ref={badgeRef}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      className={`absolute hidden md:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/75 backdrop-blur-md border border-slate-200/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] select-none transition-all duration-500 ease-out group cursor-grab active:cursor-grabbing hover:bg-white/95 hover:border-brand/35 hover:shadow-premium-md z-10 ${
+        isHovered 
+          ? "opacity-90 scale-100 pointer-events-auto" 
+          : "opacity-15 scale-90 pointer-events-none"
+      }`}
+      style={{
+        left: platform.left,
+        right: platform.right,
+        top: platform.top,
+        bottom: platform.bottom,
+        transform: `translate(${translateX + offset.x}px, ${translateY + offset.y}px)`,
+        transition: isDraggingRef.current ? "none" : "opacity 0.5s ease, scale 0.5s ease",
+      }}
+    >
+      {/* Cloud tooltip bubble */}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 px-3 py-2 rounded-xl bg-[#0a0f1e]/95 backdrop-blur-md border border-white/10 text-white text-[10px] leading-normal font-medium shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-30 text-center">
+        {platform.description}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0a0f1e]/95" />
+      </div>
+
+      <div className="flex items-center justify-center w-6 h-6 rounded-xl bg-slate-50/50 shadow-inner">
+        {platform.icon}
+      </div>
+      <span className="text-[11px] font-bold text-slate-600 tracking-tight">{platform.name}</span>
+    </div>
+  );
+}
+
 const floatingPlatforms = [
-  { name: "We Work Remotely", icon: <Briefcase size={12} className="text-rose-500" />, left: "12%", top: "22%", parallaxFactor: 0.04 },
-  { name: "Wellfound", icon: <Target size={12} className="text-emerald-500" />, right: "12%", top: "18%", parallaxFactor: -0.03 },
-  { name: "Remote.co", icon: <Globe size={12} className="text-blue-500" />, left: "10%", bottom: "35%", parallaxFactor: -0.05 },
-  { name: "Upwork", icon: <Sparkles size={12} className="text-green-600" />, right: "8%", bottom: "38%", parallaxFactor: 0.04 },
-  { name: "Indeed", icon: <Search size={12} className="text-indigo-600" />, right: "20%", top: "52%", parallaxFactor: 0.03 },
-  { name: "Working Nomads", icon: <Users size={12} className="text-cyan-600" />, left: "20%", top: "55%", parallaxFactor: -0.04 },
+  { name: "We Work Remotely", icon: <Briefcase size={12} className="text-rose-500" />, left: "12%", top: "22%", parallaxFactor: 0.04, description: "World's largest remote work community. Scraping 100+ design & dev jobs daily." },
+  { name: "Wellfound", icon: <Target size={12} className="text-emerald-500" />, right: "12%", top: "18%", parallaxFactor: -0.03, description: "Formerly AngelList Talent. Prime platform for remote startup & tech roles." },
+  { name: "Remote.co", icon: <Globe size={12} className="text-blue-500" />, left: "10%", bottom: "35%", parallaxFactor: -0.05, description: "Highly curated list of international remote positions & tech jobs." },
+  { name: "Upwork", icon: <Sparkles size={12} className="text-green-600" />, right: "8%", bottom: "38%", parallaxFactor: 0.04, description: "Leading freelance marketplace for contract, hourly, and project-based work." },
+  { name: "Indeed", icon: <Search size={12} className="text-indigo-600" />, right: "20%", top: "52%", parallaxFactor: 0.03, description: "Global employment search aggregator tracking millions of new openings." },
+  { name: "Working Nomads", icon: <Users size={12} className="text-cyan-600" />, left: "20%", top: "55%", parallaxFactor: -0.04, description: "Remote job listings curated curatively for digital nomads globally." },
 ];
 
 function HeroSection({
@@ -340,39 +522,27 @@ function HeroSection({
           />
         )}
 
-        {/* Floating platform badges with parallax effect */}
-        {mounted && floatingPlatforms.map((p) => {
-          const centerX = winSize.w / 2;
-          const centerY = winSize.h / 2;
-          const dx = coords.x - centerX;
-          const dy = coords.y - centerY;
-          const translateX = isHovered ? dx * p.parallaxFactor : 0;
-          const translateY = isHovered ? dy * p.parallaxFactor : 0;
-          
-          return (
-            <div
-              key={p.name}
-              className={`absolute hidden md:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] select-none transition-all duration-500 ease-out ${
-                isHovered 
-                  ? "opacity-90 scale-100" 
-                  : "opacity-15 scale-90"
-              }`}
-              style={{
-                left: p.left,
-                right: p.right,
-                top: p.top,
-                bottom: p.bottom,
-                transform: `translate(${translateX}px, ${translateY}px)`,
-              }}
-            >
-              <div className="flex items-center justify-center w-6 h-6 rounded-xl bg-slate-50/50 shadow-inner">
-                {p.icon}
-              </div>
-              <span className="text-[11px] font-bold text-slate-600 tracking-tight">{p.name}</span>
-            </div>
-          );
-        })}
       </div>
+
+      {/* Floating platform badges with parallax effect & drag inertia */}
+      {mounted && floatingPlatforms.map((p) => {
+        const centerX = winSize.w / 2;
+        const centerY = winSize.h / 2;
+        const dx = coords.x - centerX;
+        const dy = coords.y - centerY;
+        const translateX = isHovered ? dx * p.parallaxFactor : 0;
+        const translateY = isHovered ? dy * p.parallaxFactor : 0;
+        
+        return (
+          <DraggableBadge
+            key={p.name}
+            platform={p}
+            translateX={translateX}
+            translateY={translateY}
+            isHovered={isHovered}
+          />
+        );
+      })}
 
       <div className="w-full max-w-[1200px] mx-auto px-6 py-20 relative z-[1] flex flex-col items-center">
         <div className="w-full max-w-[760px] text-center">
@@ -756,10 +926,29 @@ function TestimonialsSection() {
     },
   ];
 
+  const allReviews = [
+    ...staticReviews,
+    ...userComments
+      .filter((c) => !c.role?.startsWith("[Suggestion:"))
+      .map((c) => ({
+        name: c.name,
+        role: c.role || "Job Seeker",
+        avatar: c.name.charAt(0),
+        quote: c.content,
+        stars: c.rating,
+      })),
+  ];
+
+  // Ensure we have enough items to fill the screen width for the marquee
+  let trackReviews = [...allReviews];
+  while (trackReviews.length < 8 && trackReviews.length > 0) {
+    trackReviews = [...trackReviews, ...allReviews];
+  }
+
   return (
-    <section className="py-20 md:py-32 px-6 bg-white">
+    <section className="py-20 md:py-32 px-6 bg-white overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <div className="flex justify-center gap-1 mb-4">
             {[...Array(5)].map((_, i) => (
               <Star key={i} size={20} className="fill-gold text-gold" />
@@ -773,60 +962,76 @@ function TestimonialsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {staticReviews.map((r) => (
-            <div
-              key={r.name}
-              className="p-8 rounded-[24px] border border-border bg-surface hover:shadow-premium-lg transition-shadow duration-300"
-            >
-              <div className="flex gap-1 mb-5">
-                {[...Array(r.stars)].map((_, i) => (
-                  <Star key={i} size={16} className="fill-gold text-gold" />
-                ))}
-              </div>
-              <p className="text-[15px] text-ink-2 leading-relaxed mb-6 font-medium italic">
-                "{r.quote}"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center font-display font-extrabold text-sm text-white">
-                  {r.avatar}
-                </div>
-                <div>
-                  <div className="font-bold text-sm text-ink">{r.name}</div>
-                  <div className="text-[13px] text-ink-3 font-medium">
-                    {r.role}
+        {/* Sliding Marquee Track */}
+        <div className="overflow-hidden relative w-screen left-1/2 right-1/2 -ml-[50vw] mb-16 select-none py-4">
+          {/* Fade gradients */}
+          <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          
+          <div 
+            className="flex gap-6 items-center animate-marquee hover:[animation-play-state:paused] w-max cursor-default"
+            style={{ animationDuration: "50s" }}
+          >
+            {/* Track A */}
+            <div className="flex gap-6 items-center shrink-0">
+              {trackReviews.map((r, i) => (
+                <div
+                  key={`review-a-${r.name}-${i}`}
+                  className="w-[320px] md:w-[350px] p-8 rounded-[24px] border border-border bg-surface hover:shadow-premium-lg hover:border-brand/20 hover:scale-[1.01] transition-all duration-300 shrink-0"
+                >
+                  <div className="flex gap-1 mb-5">
+                    {[...Array(r.stars)].map((_, idx) => (
+                      <Star key={idx} size={15} className="fill-gold text-gold" />
+                    ))}
+                  </div>
+                  <p className="text-[14px] text-ink-2 leading-relaxed mb-6 font-medium italic min-h-[66px] line-clamp-3">
+                    "{r.quote}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-brand flex items-center justify-center font-display font-extrabold text-xs text-white">
+                      {r.avatar}
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-ink">{r.name}</div>
+                      <div className="text-[11px] text-ink-3 font-medium">
+                        {r.role}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
 
-          {userComments.map((r) => (
-            <div
-              key={r.id}
-              className="p-8 rounded-[24px] border border-brand/10 bg-brand/[0.02] hover:shadow-premium-lg transition-shadow duration-300"
-            >
-              <div className="flex gap-1 mb-5">
-                {[...Array(r.rating)].map((_, i) => (
-                  <Star key={i} size={16} className="fill-gold text-gold" />
-                ))}
-              </div>
-              <p className="text-[15px] text-ink-2 leading-relaxed mb-6 font-medium italic">
-                "{r.content}"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center font-display font-extrabold text-sm text-brand">
-                  {r.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="font-bold text-sm text-ink">{r.name}</div>
-                  <div className="text-[13px] text-ink-3 font-medium">
-                    {r.role}
+            {/* Track B */}
+            <div className="flex gap-6 items-center shrink-0" aria-hidden="true">
+              {trackReviews.map((r, i) => (
+                <div
+                  key={`review-b-${r.name}-${i}`}
+                  className="w-[320px] md:w-[350px] p-8 rounded-[24px] border border-border bg-surface hover:shadow-premium-lg hover:border-brand/20 hover:scale-[1.01] transition-all duration-300 shrink-0"
+                >
+                  <div className="flex gap-1 mb-5">
+                    {[...Array(r.stars)].map((_, idx) => (
+                      <Star key={idx} size={15} className="fill-gold text-gold" />
+                    ))}
+                  </div>
+                  <p className="text-[14px] text-ink-2 leading-relaxed mb-6 font-medium italic min-h-[66px] line-clamp-3">
+                    "{r.quote}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-brand flex items-center justify-center font-display font-extrabold text-xs text-white">
+                      {r.avatar}
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-ink">{r.name}</div>
+                      <div className="text-[11px] text-ink-3 font-medium">
+                        {r.role}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
 
         {/* Modal Trigger Button */}

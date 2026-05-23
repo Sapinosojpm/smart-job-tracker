@@ -97,7 +97,7 @@ export default function AdminDashboard() {
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('ALL');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs' | 'system'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'testimonials' | 'suggestions' | 'logs' | 'system'>('overview');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -108,19 +108,22 @@ export default function AdminDashboard() {
     targetPlan: 'FREE' | 'PRO' | 'TEAM';
   } | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
+  const [testimonials, setTestimonials] = useState<any[]>([]);
 
   const targetUser = confirmModal ? users.find(u => u.userId === confirmModal.userId) : null;
 
   const fetchAdminData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes, testimonialsRes] = await Promise.all([
         fetch('/api/admin/stats'),
-        fetch('/api/admin/users')
+        fetch('/api/admin/users'),
+        fetch('/api/testimonials?admin=true')
       ]);
 
       const statsData = await statsRes.json();
       const usersData = await usersRes.json();
+      const testimonialsData = await testimonialsRes.json();
       
       if (!statsRes.ok || !statsData.success) {
         throw new Error(statsData.error || 'Failed to fetch admin stats');
@@ -132,6 +135,10 @@ export default function AdminDashboard() {
       }
       setUsers(usersData.data);
       setFilteredUsers(usersData.data);
+
+      if (testimonialsRes.ok && testimonialsData.success) {
+        setTestimonials(testimonialsData.data);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Error loading dashboard data');
     } finally {
@@ -219,6 +226,49 @@ export default function AdminDashboard() {
       }
     } catch (err: any) {
       toast.error(err.message || 'Error updating user plan');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleApprove = async (id: string, approved: boolean) => {
+    try {
+      setActionLoading(id);
+      const res = await fetch('/api/testimonials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, approved })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update testimonial status');
+      }
+      toast.success(approved ? 'Testimonial approved!' : 'Testimonial status revoked!');
+      setTestimonials(prev => prev.map(t => t.id === id ? { ...t, approved } : t));
+    } catch (err: any) {
+      toast.error(err.message || 'Error updating testimonial');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteTestimonial = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this entry?')) return;
+    try {
+      setActionLoading(id);
+      const res = await fetch('/api/testimonials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'delete' })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete entry');
+      }
+      toast.success('Deleted successfully!');
+      setTestimonials(prev => prev.filter(t => t.id !== id));
+    } catch (err: any) {
+      toast.error(err.message || 'Error deleting entry');
     } finally {
       setActionLoading(null);
     }
@@ -312,7 +362,7 @@ export default function AdminDashboard() {
 
       {/* --- DASHBOARD TABS --- */}
       <div className="flex border-b border-slate-200 mb-10 overflow-x-auto whitespace-nowrap scrollbar-none gap-2">
-        {(['overview', 'users', 'logs', 'system'] as const).map((tab) => (
+        {(['overview', 'users', 'testimonials', 'suggestions', 'logs', 'system'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -324,6 +374,8 @@ export default function AdminDashboard() {
           >
             {tab === 'overview' && 'System Overview'}
             {tab === 'users' && 'User Directory'}
+            {tab === 'testimonials' && 'Testimonials'}
+            {tab === 'suggestions' && 'Suggestions'}
             {tab === 'logs' && 'Scraper History'}
             {tab === 'system' && 'Engine Health'}
           </button>
@@ -611,6 +663,183 @@ export default function AdminDashboard() {
                 ) : (
                   <tr>
                     <td colSpan={7} className="py-10 text-center text-slate-400 font-medium">No users matched your search criteria.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2.4 TESTIMONIAL APPROVALS TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'testimonials' && (
+        <div className="bg-white border border-slate-100 rounded-[40px] shadow-sm overflow-hidden p-6 md:p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-black text-slate-900">Landing Page Testimonials</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                Approve or reject customer stories before they show on the landing page
+              </p>
+            </div>
+            <div className="bg-blue-50 border border-blue-100 text-blue-600 rounded-2xl px-4 py-2 text-xs font-bold flex items-center gap-2">
+              <ClipboardList size={14} />
+              <span>{testimonials.filter(t => !t.role?.startsWith('[Suggestion:')).length} Total Reviews</span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pl-4">User</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Role</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Content</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Rating</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pr-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {testimonials.filter(t => !t.role?.startsWith('[Suggestion:')).length > 0 ? (
+                  testimonials.filter(t => !t.role?.startsWith('[Suggestion:')).map((r) => (
+                    <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 text-xs font-bold text-slate-700 pl-4 max-w-[150px] truncate" title={r.name}>
+                        {r.name}
+                      </td>
+                      <td className="py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        {r.role || 'Job Seeker'}
+                      </td>
+                      <td className="py-4 text-xs font-medium text-slate-600 max-w-[280px] truncate" title={r.content}>
+                        "{r.content}"
+                      </td>
+                      <td className="py-4 text-xs font-bold text-slate-900">
+                        <span className="flex items-center gap-0.5 text-gold font-extrabold">
+                          {r.rating} ★
+                        </span>
+                      </td>
+                      <td className="py-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                          r.approved
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                        }`}>
+                          {r.approved ? 'Approved' : 'Pending Review'}
+                        </span>
+                      </td>
+                      <td className="py-4 pr-4 text-right">
+                        {actionLoading === r.id ? (
+                          <Loader2 className="w-5 h-5 text-blue-600 animate-spin ml-auto" />
+                        ) : (
+                          <div className="flex gap-2 justify-end">
+                            {r.approved ? (
+                              <button
+                                onClick={() => handleToggleApprove(r.id, false)}
+                                className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all"
+                              >
+                                Revoke
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleToggleApprove(r.id, true)}
+                                className="px-2.5 py-1 text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-sm transition-all"
+                              >
+                                Approve
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteTestimonial(r.id)}
+                              className="px-2.5 py-1 text-[10px] font-bold bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg transition-all"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">No testimonials found in database.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2.5 USER SUGGESTIONS TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'suggestions' && (
+        <div className="bg-white border border-slate-100 rounded-[40px] shadow-sm overflow-hidden p-6 md:p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-black text-slate-900">User Suggestions</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                Feature requests and improvements submitted by users
+              </p>
+            </div>
+            <div className="bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl px-4 py-2 text-xs font-bold flex items-center gap-2">
+              <Zap size={14} className="fill-indigo-600" />
+              <span>{testimonials.filter(t => t.role?.startsWith('[Suggestion:')).length} Submissions</span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pl-4">User</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Category</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Title</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Priority</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider">Description</th>
+                  <th className="pb-4 text-xs font-black text-slate-400 uppercase tracking-wider pr-4">Submitted At</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {testimonials.filter(t => t.role?.startsWith('[Suggestion:')).length > 0 ? (
+                  testimonials.filter(t => t.role?.startsWith('[Suggestion:')).map((s) => {
+                    const match = (s.role || '').match(/^\[Suggestion:\s*([^\]]+)\]\s*(.*)$/i);
+                    const category = match ? match[1] : 'General';
+                    const title = match ? match[2] : s.role;
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 text-xs font-bold text-slate-700 pl-4 max-w-[150px] truncate" title={s.name}>
+                          {s.name}
+                        </td>
+                        <td className="py-4">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 border border-blue-100 text-blue-700 uppercase">
+                            {category}
+                          </span>
+                        </td>
+                        <td className="py-4 font-bold text-sm text-slate-900 max-w-[150px] truncate" title={title}>
+                          {title}
+                        </td>
+                        <td className="py-4">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                            s.rating === 5 ? 'bg-red-50 text-red-700 border border-red-100' :
+                            s.rating === 3 ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                            'bg-slate-100 text-slate-600 border-transparent'
+                          }`}>
+                            {s.rating === 5 ? 'Critical' : s.rating === 3 ? 'Important' : 'Nice to Have'}
+                          </span>
+                        </td>
+                        <td className="py-4 text-xs font-medium text-slate-600 max-w-[300px] truncate pr-4" title={s.content}>
+                          {s.content}
+                        </td>
+                        <td className="py-4 text-xs font-semibold text-slate-500">
+                          {new Date(s.createdAt).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">No user suggestions submitted yet.</td>
                   </tr>
                 )}
               </tbody>

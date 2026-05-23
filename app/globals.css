@@ -227,3 +227,10 @@
   background-image: radial-gradient(rgba(26, 86, 219, 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* Pause marquee on hover */
+.animate-marquee:hover,
+.animate-marquee:hover * {
+  animation-play-state: paused !important;
+}
+
