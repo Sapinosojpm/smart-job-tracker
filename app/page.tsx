@@ -159,9 +159,11 @@ function NavBar({
 function HeroSection({
   stats,
   onGetStarted,
+  onWatchDemo,
 }: {
   stats: any;
   onGetStarted: () => void;
+  onWatchDemo: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -233,7 +235,10 @@ function HeroSection({
             >
               Start Free — No Credit Card <ArrowRight size={18} />
             </button>
-            <button className="flex items-center gap-2 px-[24px] py-[14px] rounded-xl border-2 border-border bg-white text-[15px] font-bold text-ink-2 hover:border-brand hover:text-brand transition-all">
+            <button
+              onClick={onWatchDemo}
+              className="flex items-center gap-2 px-[24px] py-[14px] rounded-xl border-2 border-border bg-white text-[15px] font-bold text-ink-2 hover:border-brand hover:text-brand hover:scale-105 active:scale-95 transition-all"
+            >
               <Play size={16} fill="currentColor" /> Watch 2-min demo
             </button>
           </div>
@@ -1374,11 +1379,55 @@ function AuthModal({
   );
 }
 
+/* ─── Demo Video Modal ────────────────────────────────────────────── */
+function DemoVideoModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]">
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className="absolute inset-0 bg-[#0a0f1e]/80 backdrop-blur-md"
+      />
+      
+      {/* Modal Container */}
+      <div className="relative w-full max-w-[800px] aspect-video bg-black rounded-3xl shadow-2xl overflow-hidden border border-white/10 animate-fade-up">
+        {/* Top gradient line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 z-10" />
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur-sm flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-20"
+        >
+          <X size={18} />
+        </button>
+
+        {/* Iframe for Google Drive Video */}
+        <iframe
+          src="https://drive.google.com/file/d/1hU4cYuX5gKccmCyF9vm9VbASBpbL4ttW/preview"
+          className="w-full h-full border-0"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main ───────────────────────────────────────────────────────── */
 function LandingContent() {
   const [modalOpen, setModalOpen] = useState(false);
   const [defaultSignUp, setDefaultSignUp] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [demoOpen, setDemoOpen] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -1418,7 +1467,11 @@ function LandingContent() {
   return (
     <div className="w-full bg-white text-ink selection:bg-brand/10">
       <NavBar onSignIn={openSignIn} onGetStarted={openSignUp} />
-      <HeroSection stats={stats} onGetStarted={openSignUp} />
+      <HeroSection
+        stats={stats}
+        onGetStarted={openSignUp}
+        onWatchDemo={() => setDemoOpen(true)}
+      />
       <LogoMarquee />
       <FeaturesSection />
       <HowItWorksSection />
@@ -1430,6 +1483,10 @@ function LandingContent() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         defaultSignUp={defaultSignUp}
+      />
+      <DemoVideoModal
+        isOpen={demoOpen}
+        onClose={() => setDemoOpen(false)}
       />
     </div>
   );
