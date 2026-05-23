@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Zap,
@@ -935,11 +935,13 @@ function AuthModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otpCode, setOtpCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const supabase = createClient();
+
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(6).fill(""));
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     setAuthMode(defaultSignUp ? "signup" : "signin");
@@ -952,7 +954,73 @@ function AuthModal({
     }
   }, [countdown]);
 
+  useEffect(() => {
+    setOtpDigits(Array(6).fill(""));
+  }, [authMode, isOpen]);
+
   if (!isOpen) return null;
+
+  const handleOtpChange = (index: number, val: string) => {
+    const cleanVal = val.replace(/\D/g, "");
+    if (!cleanVal) {
+      const newOtp = [...otpDigits];
+      newOtp[index] = "";
+      setOtpDigits(newOtp);
+      return;
+    }
+
+    const newOtp = [...otpDigits];
+    if (cleanVal.length > 1) {
+      const pastedCode = cleanVal.slice(0, 6 - index);
+      for (let i = 0; i < pastedCode.length; i++) {
+        newOtp[index + i] = pastedCode[i];
+      }
+      setOtpDigits(newOtp);
+      const nextFocusIndex = Math.min(index + pastedCode.length, 5);
+      otpInputRefs.current[nextFocusIndex]?.focus();
+    } else {
+      newOtp[index] = cleanVal;
+      setOtpDigits(newOtp);
+      if (index < 5) {
+        otpInputRefs.current[index + 1]?.focus();
+      }
+    }
+  };
+
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        const newOtp = [...otpDigits];
+        newOtp[index - 1] = "";
+        setOtpDigits(newOtp);
+        otpInputRefs.current[index - 1]?.focus();
+      } else {
+        const newOtp = [...otpDigits];
+        newOtp[index] = "";
+        setOtpDigits(newOtp);
+      }
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (pastedData) {
+      const newOtp = [...otpDigits];
+      for (let i = 0; i < pastedData.length; i++) {
+        newOtp[i] = pastedData[i];
+      }
+      setOtpDigits(newOtp);
+      const focusIdx = Math.min(pastedData.length, 5);
+      otpInputRefs.current[focusIdx]?.focus();
+    }
+  };
 
   const handleResendOtp = async () => {
     if (countdown > 0) return;
@@ -985,7 +1053,7 @@ function AuthModal({
           setLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -993,13 +1061,27 @@ function AuthModal({
           },
         });
         if (error) throw error;
+
+        if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+          toast.warning("This email is already registered. Switching to Sign In.");
+          setAuthMode("signin");
+          setLoading(false);
+          return;
+        }
+
         toast.info("Check your email for the verification code!");
         setAuthMode("otp");
         setCountdown(60);
       } else if (authMode === "otp") {
+        const token = otpDigits.join("");
+        if (token.length !== 6) {
+          toast.error("Please enter the 6-digit verification code.");
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.verifyOtp({
           email,
-          token: otpCode,
+          token,
           type: "signup",
         });
         if (error) throw error;
@@ -1047,17 +1129,20 @@ function AuthModal({
         onClick={onClose}
         className="absolute inset-0 bg-[#0a0f1e]/70 backdrop-blur-md"
       />
-      <div className="relative w-full max-w-[440px] bg-white rounded-[32px] p-10 md:p-12 shadow-2xl animate-fade-up">
+      <div className="relative w-full max-w-[440px] bg-white rounded-[32px] p-10 md:p-12 shadow-2xl animate-fade-up overflow-hidden border border-slate-100">
+        {/* Top gradient line */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500" />
+
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full border border-border bg-surface flex items-center justify-center text-ink-3 hover:text-brand hover:border-brand transition-all"
+          className="absolute top-6 right-6 w-9 h-9 rounded-full border border-border bg-surface flex items-center justify-center text-ink-3 hover:text-brand hover:border-brand hover:scale-105 active:scale-95 transition-all shadow-sm"
         >
           <X size={18} />
         </button>
 
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="w-14 h-14 mx-auto mb-4 shrink-0 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 shrink-0 flex items-center justify-center rounded-2xl bg-blue-50/50 p-2 shadow-inner ring-1 ring-blue-500/10">
             <img
               src="/jobscoutai.png"
               alt="JobScoutAI"
@@ -1073,7 +1158,7 @@ function AuthModal({
                   ? "Reset Password"
                   : "Verify Email"}
           </h3>
-          <p className="text-sm text-ink-3 font-medium">
+          <p className="text-sm text-ink-3 font-medium px-4">
             {authMode === "signup"
               ? "Start finding your dream job today."
               : authMode === "signin"
@@ -1089,7 +1174,7 @@ function AuthModal({
             {/* Google */}
             <button
               onClick={handleGoogle}
-              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-border bg-white text-sm font-bold text-ink-2 hover:border-brand hover:text-brand transition-all mb-6"
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 border-border bg-white text-sm font-bold text-ink-2 hover:border-brand hover:text-brand hover:scale-[1.01] active:scale-95 transition-all mb-6"
             >
               <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -1113,34 +1198,46 @@ function AuthModal({
         {/* Form */}
         <form onSubmit={handleAuth} className="flex flex-col gap-4">
           {authMode === "otp" ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-[11px] font-extrabold text-ink-3 tracking-widest uppercase mb-2">
+                <label className="block text-[11px] font-extrabold text-ink-3 tracking-widest uppercase mb-4 text-center">
                   Verification Code
                 </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-4">
-                    <Lock size={16} />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                    placeholder="123456"
-                    className="w-full py-3 pl-11 pr-4 rounded-xl border-2 border-border bg-surface text-center tracking-[0.5em] text-lg font-bold outline-none focus:border-brand transition-colors"
-                  />
+                <div className="flex justify-between gap-2 max-w-[340px] mx-auto mb-2">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => {
+                        otpInputRefs.current[idx] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                      onPaste={handleOtpPaste}
+                      className="w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/10 transition-all duration-200"
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-center">
                 <button
                   type="button"
                   onClick={handleResendOtp}
                   disabled={loading || countdown > 0}
-                  className="text-[11px] font-bold text-brand hover:underline cursor-pointer disabled:text-ink-4 disabled:no-underline disabled:cursor-not-allowed"
+                  className="text-xs font-bold text-brand hover:underline cursor-pointer disabled:text-ink-4 disabled:no-underline disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Code"}
+                  {countdown > 0 ? (
+                    <>
+                      <Loader2 size={12} className="animate-spin text-ink-4" />
+                      <span>Resend Code in {countdown}s</span>
+                    </>
+                  ) : (
+                    "Resend Code"
+                  )}
                 </button>
               </div>
             </div>
@@ -1220,7 +1317,7 @@ function AuthModal({
           <button
             type="submit"
             disabled={loading}
-            className="shimmer-btn w-full py-3.5 rounded-xl text-[15px] font-bold text-white flex items-center justify-center gap-2.5 disabled:opacity-70 mt-2 hover:scale-[1.02] active:scale-95 transition-transform"
+            className="shimmer-btn w-full py-3.5 rounded-xl text-[15px] font-bold text-white flex items-center justify-center gap-2.5 disabled:opacity-70 mt-2 hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-lg shadow-brand/10 hover:shadow-brand/20"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />
