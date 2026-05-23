@@ -226,46 +226,8 @@ export default function JobsPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Dynamic Scrapes Quota Badge */}
-          {settings && (
-            <div id="tour-quota-badge" className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-200 shadow-sm h-[48px]">
-              <div className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold ${
-                settings.scrapeLimit !== null && settings.scrapeLimit !== ''
-                  ? 'bg-amber-50 text-amber-500 border border-amber-100/50'
-                  : 'bg-blue-50 text-blue-500 border border-blue-100/50'
-              }`}>
-                <Zap size={14} className={settings.scrapeLimit !== null && settings.scrapeLimit !== '' ? "fill-amber-500/10" : "fill-blue-500/10"} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Searches Left</span>
-                <span className="text-xs font-extrabold leading-none text-slate-800">
-                  {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
-                    ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} / ${settings.scrapeLimit}`
-                    : "Unlimited"}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Main Action Group */}
-          <div id="tour-search-btn-wrapper" className="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
-            <ScrapeButton onSuccess={() => fetchJobs()} />
-            <div className="w-px h-6 bg-slate-200 mx-1" />
-            <button
-              suppressHydrationWarning
-              onClick={() => {
-                setIsRefreshing(true);
-                fetchJobs().then(() => setIsRefreshing(false));
-              }}
-              className="p-2.5 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
-              title="Refresh Board"
-            >
-              <RefreshCw size={20} className={isRefreshing ? 'animate-spin text-blue-600' : ''} />
-            </button>
-          </div>
-
           {/* Secondary Actions */}
-          <div id="tour-secondary-actions" className="flex items-center gap-1.5 ml-2">
+          <div id="tour-secondary-actions" className="flex items-center gap-1.5">
             <button
               suppressHydrationWarning
               onClick={() => setShowTour(true)}
@@ -273,14 +235,6 @@ export default function JobsPage() {
               title="Guide Tour"
             >
               <HelpCircle size={20} />
-            </button>
-            <button
-              suppressHydrationWarning
-              onClick={() => setShowConfigModal(true)}
-              className="p-3 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all"
-              title="Settings"
-            >
-              <SettingsIcon size={20} />
             </button>
             <button
               suppressHydrationWarning
@@ -311,6 +265,86 @@ export default function JobsPage() {
         </div>
       </div>
 
+      {/* --- AI SCRAPER CONTROL PANEL --- */}
+      <div className="bg-white border border-slate-200/90 rounded-[28px] p-6 shadow-sm mb-8 relative overflow-hidden">
+        {/* Top subtle gradient decoration */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Left Side: Scraper Configuration Info */}
+          <div className="flex-1 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+              <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest">AI Crawler Setup</h2>
+            </div>
+            
+            {settings ? (
+              <div className="text-sm font-bold text-slate-700 leading-normal flex flex-wrap items-center gap-2">
+                <span>Crawling for:</span>
+                <span className="text-blue-600 font-extrabold bg-blue-50/60 px-2 py-0.5 rounded-lg border border-blue-100">
+                  "{settings.scraperQuery || 'React Developer'}"
+                </span>
+                <span className="text-slate-400 font-medium text-xs">
+                  ({
+                    Object.keys(settings).filter(k => k.startsWith('scrape') && settings[k] === true).length
+                  } platforms active)
+                </span>
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 font-semibold">Loading current scraper setup...</div>
+            )}
+            
+            {/* Configure Scraper Button */}
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+            >
+              <SettingsIcon size={11} />
+              Advanced Settings & Telegram
+            </button>
+          </div>
+
+          {/* Right Side: Quick Stats & Scrape Action */}
+          <div className="flex flex-wrap items-center gap-4 shrink-0">
+            {/* Searches remaining badge */}
+            {settings && (
+              <div id="tour-quota-badge" className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-100">
+                <Zap size={14} className="text-amber-500 fill-amber-500/10" />
+                <div className="text-left">
+                  <div className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none mb-0.5">Scrapes Left</div>
+                  <div className="text-xs font-bold text-slate-700 leading-none">
+                    {settings.scrapeLimit !== null && settings.scrapeLimit !== undefined && settings.scrapeLimit !== ''
+                      ? `${Math.max(0, Number(settings.scrapeLimit) - (settings.todayScrapeCount ?? 0))} / ${settings.scrapeLimit}`
+                      : "Unlimited"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Run Scraper Button */}
+            <div id="tour-search-btn-wrapper" className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <ScrapeButton 
+                onSuccess={() => fetchJobs()} 
+                currentSettings={settings}
+                onSettingsSaved={(newSettings) => setSettings(newSettings)}
+              />
+              <div className="w-px h-6 bg-slate-200 mx-1" />
+              <button
+                suppressHydrationWarning
+                onClick={() => {
+                  setIsRefreshing(true);
+                  fetchJobs().then(() => setIsRefreshing(false));
+                }}
+                className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                title="Refresh Board"
+              >
+                <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-blue-600' : ''} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* --- MODERN SEARCH & FILTERS --- */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-10 w-full">
         <div id="tour-search-bar" className="relative flex-grow group">
@@ -318,7 +352,7 @@ export default function JobsPage() {
           <input
             suppressHydrationWarning
             type="text"
-            placeholder="Search jobs, companies, or keywords..."
+            placeholder="Filter loaded jobs on board by title, company, or keywords..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-14 pl-14 pr-6 rounded-[20px] bg-white border border-slate-200 shadow-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-slate-900"
