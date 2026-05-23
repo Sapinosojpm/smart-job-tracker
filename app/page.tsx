@@ -697,11 +697,8 @@ function LogoMarquee() {
               {doubledRow1.map((p, i) => (
                 <div
                   key={`r1-a-${p.name}-${i}`}
-                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                  className={`group flex items-center px-6 py-2.5 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
                 >
-                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
-                    {p.icon}
-                  </div>
                   <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
                     {p.name}
                   </span>
@@ -713,11 +710,8 @@ function LogoMarquee() {
               {doubledRow1.map((p, i) => (
                 <div
                   key={`r1-b-${p.name}-${i}`}
-                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                  className={`group flex items-center px-6 py-2.5 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
                 >
-                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
-                    {p.icon}
-                  </div>
                   <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
                     {p.name}
                   </span>
@@ -735,11 +729,8 @@ function LogoMarquee() {
               {doubledRow2.map((p, i) => (
                 <div
                   key={`r2-a-${p.name}-${i}`}
-                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                  className={`group flex items-center px-6 py-2.5 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
                 >
-                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
-                    {p.icon}
-                  </div>
                   <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
                     {p.name}
                   </span>
@@ -751,11 +742,8 @@ function LogoMarquee() {
               {doubledRow2.map((p, i) => (
                 <div
                   key={`r2-b-${p.name}-${i}`}
-                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                  className={`group flex items-center px-6 py-2.5 rounded-full bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
                 >
-                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
-                    {p.icon}
-                  </div>
                   <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
                     {p.name}
                   </span>
