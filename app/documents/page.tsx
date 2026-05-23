@@ -75,17 +75,7 @@ export default function DocumentsPage() {
         ]
       }
     ],
-    projects: [
-      {
-        name: 'E-commerce Platform',
-        link: 'https://demo-ecommerce.vercel.app/',
-        bullets: [
-          'Built a full-featured online store with payment gateway integration',
-          'Developed a dynamic inventory management system',
-          'Designed a mobile-first user interface using Tailwind CSS'
-        ]
-      }
-    ],
+    projects: [],
     education: [
       {
         degree: 'BACHELOR OF SCIENCE IN COMPUTER SCIENCE',
@@ -608,11 +598,17 @@ export default function DocumentsPage() {
                       </div>
 
                       <div className="space-y-8">
+                        {resumeData.projects.length === 0 && (
+                          <p className="text-[11px] text-slate-400 font-semibold text-center py-4 border-2 border-dashed border-slate-100 rounded-2xl">
+                            No projects added yet. Click <span className="text-blue-500">+ Add Project</span> to get started.
+                          </p>
+                        )}
                         {resumeData.projects.map((proj, i) => (
                           <div key={i} className="p-6 rounded-[28px] border-2 border-slate-100 bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-slate-100/55 transition-all duration-350 space-y-4 relative group/item">
                              <button 
                                onClick={() => removeProject(i)}
-                               className="absolute top-5 right-5 w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-400 hover:text-red-600 hover:border-red-100 transition-all opacity-0 group-hover/item:opacity-100 shadow-sm cursor-pointer"
+                               className="absolute top-5 right-5 w-8 h-8 rounded-full border border-red-100 bg-white flex items-center justify-center text-red-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-all shadow-sm cursor-pointer"
+                               title="Remove project"
                              >
                                <Trash2 size={14} />
                              </button>
