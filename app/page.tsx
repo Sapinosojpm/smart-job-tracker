@@ -156,6 +156,132 @@ function NavBar({
   );
 }
 
+interface KineticGridProps {
+  mouseX: number;
+  mouseY: number;
+  isHovered: boolean;
+}
+
+function KineticGrid({ mouseX, mouseY, isHovered }: KineticGridProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0, active: false });
+
+  useEffect(() => {
+    mouseRef.current.x = mouseX;
+    mouseRef.current.y = mouseY;
+    mouseRef.current.active = isHovered;
+  }, [mouseX, mouseY, isHovered]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = canvas.offsetWidth;
+    let height = canvas.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    const dots: { x0: number; y0: number; x: number; y: number; vx: number; vy: number }[] = [];
+    const spacing = 40;
+
+    const initDots = () => {
+      dots.length = 0;
+      width = canvas.offsetWidth;
+      height = canvas.offsetHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+
+      for (let x = spacing / 2; x < width; x += spacing) {
+        for (let y = spacing / 2; y < height; y += spacing) {
+          dots.push({ x0: x, y0: y, x: x, y: y, vx: 0, vy: 0 });
+        }
+      }
+    };
+
+    initDots();
+
+    const handleResize = () => {
+      initDots();
+    };
+    window.addEventListener("resize", handleResize);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+      const mActive = mouseRef.current.active;
+
+      for (let i = 0; i < dots.length; i++) {
+        const dot = dots[i];
+        let targetX = dot.x0;
+        let targetY = dot.y0;
+        let radius = 1.2;
+        let alpha = 0.12;
+        const color = "26, 86, 219"; // Brand blue RGB
+
+        if (mActive) {
+          const dx = mx - dot.x0;
+          const dy = my - dot.y0;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const maxDist = 180;
+
+          if (dist < maxDist) {
+            const force = (maxDist - dist) / maxDist;
+            // Push away (repulsion force)
+            targetX = dot.x0 - (dx / dist) * force * 16;
+            targetY = dot.y0 - (dy / dist) * force * 16;
+            radius = 1.2 + force * 1.8;
+            alpha = 0.12 + force * 0.48;
+          }
+        }
+
+        // Spring physics (easing with inertia)
+        const ax = (targetX - dot.x) * 0.12;
+        const ay = (targetY - dot.y) * 0.12;
+        dot.vx = (dot.vx + ax) * 0.82;
+        dot.vy = (dot.vy + ay) * 0.82;
+        dot.x += dot.vx;
+        dot.y += dot.vy;
+
+        // Draw dot
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color}, ${alpha})`;
+        ctx.fill();
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-80"
+    />
+  );
+}
+
+const floatingPlatforms = [
+  { name: "We Work Remotely", icon: <Briefcase size={12} className="text-rose-500" />, left: "12%", top: "22%", parallaxFactor: 0.04 },
+  { name: "Wellfound", icon: <Target size={12} className="text-emerald-500" />, right: "12%", top: "18%", parallaxFactor: -0.03 },
+  { name: "Remote.co", icon: <Globe size={12} className="text-blue-500" />, left: "10%", bottom: "35%", parallaxFactor: -0.05 },
+  { name: "Upwork", icon: <Sparkles size={12} className="text-green-600" />, right: "8%", bottom: "38%", parallaxFactor: 0.04 },
+  { name: "Indeed", icon: <Search size={12} className="text-indigo-600" />, right: "20%", top: "52%", parallaxFactor: 0.03 },
+  { name: "Working Nomads", icon: <Users size={12} className="text-cyan-600" />, left: "20%", top: "55%", parallaxFactor: -0.04 },
+];
+
 function HeroSection({
   stats,
   onGetStarted,
@@ -168,9 +294,16 @@ function HeroSection({
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [winSize, setWinSize] = useState({ w: 1200, h: 800 });
 
   useEffect(() => {
     setMounted(true);
+    setWinSize({ w: window.innerWidth, h: window.innerHeight });
+    const handleResize = () => {
+      setWinSize({ w: window.innerWidth, h: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -193,7 +326,9 @@ function HeroSection({
         <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-[radial-gradient(ellipse,_rgba(26,86,219,0.06)_0%,_transparent_70%)]" />
         <div className="absolute bottom-[5%] left-[-5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,_rgba(6,182,212,0.05)_0%,_transparent_70%)]" />
         <div className="absolute bottom-[5%] right-[-5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,_rgba(26,86,219,0.05)_0%,_transparent_70%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(26,86,219,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,86,219,0.12)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_40%,#000_40%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_80%_60%_at_50%_40%,#000_40%,transparent_90%)]" />
+        
+        {/* Kinetic dot grid */}
+        <KineticGrid mouseX={coords.x} mouseY={coords.y} isHovered={isHovered} />
 
         {/* Dynamic spotlight that tracks the mouse hover */}
         {isHovered && (
@@ -204,6 +339,39 @@ function HeroSection({
             }}
           />
         )}
+
+        {/* Floating platform badges with parallax effect */}
+        {mounted && floatingPlatforms.map((p) => {
+          const centerX = winSize.w / 2;
+          const centerY = winSize.h / 2;
+          const dx = coords.x - centerX;
+          const dy = coords.y - centerY;
+          const translateX = isHovered ? dx * p.parallaxFactor : 0;
+          const translateY = isHovered ? dy * p.parallaxFactor : 0;
+          
+          return (
+            <div
+              key={p.name}
+              className={`absolute hidden md:flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] select-none transition-all duration-500 ease-out ${
+                isHovered 
+                  ? "opacity-90 scale-100" 
+                  : "opacity-15 scale-90"
+              }`}
+              style={{
+                left: p.left,
+                right: p.right,
+                top: p.top,
+                bottom: p.bottom,
+                transform: `translate(${translateX}px, ${translateY}px)`,
+              }}
+            >
+              <div className="flex items-center justify-center w-6 h-6 rounded-xl bg-slate-50/50 shadow-inner">
+                {p.icon}
+              </div>
+              <span className="text-[11px] font-bold text-slate-600 tracking-tight">{p.name}</span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="w-full max-w-[1200px] mx-auto px-6 py-20 relative z-[1] flex flex-col items-center">
