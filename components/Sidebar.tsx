@@ -148,7 +148,7 @@ export default function Sidebar({
           >
             <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-600/10 transition-all duration-300 group-hover:scale-[1.08] border border-slate-100 bg-white shrink-0">
               <Image
-                src="/logo.png"
+                src="/jobscoutai.png"
                 alt="JobScoutAI"
                 width={48}
                 height={48}

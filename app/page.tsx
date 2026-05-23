@@ -67,7 +67,7 @@ function NavBar({
         <div className="flex items-center gap-3 group cursor-pointer">
           <div className="w-10 h-10 shrink-0 transition-all duration-500 group-hover:scale-115 group-hover:rotate-[6deg] group-hover:drop-shadow-[0_4px_12px_rgba(26,86,219,0.2)]">
             <img
-              src="/logo.png"
+              src="/jobscoutai.png"
               alt="JobScoutAI"
               className="w-full h-full object-contain"
             />
@@ -890,7 +890,7 @@ function Footer() {
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-8 h-8 shrink-0">
               <img
-                src="/logo.png"
+                src="/jobscoutai.png"
                 alt="JobScoutAI"
                 className="w-full h-full object-contain"
               />
@@ -929,12 +929,13 @@ function AuthModal({
   onClose: () => void;
   defaultSignUp?: boolean;
 }) {
-  const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">(
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot" | "otp">(
     "signin",
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -944,6 +945,25 @@ function AuthModal({
   }, [defaultSignUp, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      toast.success("Verification code resent successfully!");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -963,7 +983,17 @@ function AuthModal({
           },
         });
         if (error) throw error;
-        toast.info("Check your email for the confirmation link!");
+        toast.info("Check your email for the verification code!");
+        setAuthMode("otp");
+      } else if (authMode === "otp") {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token: otpCode,
+          type: "signup",
+        });
+        if (error) throw error;
+        toast.success("Verification successful! Logging in...");
+        window.location.href = "/jobs";
       } else if (authMode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -1018,7 +1048,7 @@ function AuthModal({
         <div className="text-center mb-10">
           <div className="w-14 h-14 mx-auto mb-4 shrink-0 flex items-center justify-center">
             <img
-              src="/logo.png"
+              src="/jobscoutai.png"
               alt="JobScoutAI"
               className="w-full h-full object-contain"
             />
@@ -1028,18 +1058,22 @@ function AuthModal({
               ? "Create Account"
               : authMode === "signin"
                 ? "Welcome Back"
-                : "Reset Password"}
+                : authMode === "forgot"
+                  ? "Reset Password"
+                  : "Verify Email"}
           </h3>
           <p className="text-sm text-ink-3 font-medium">
             {authMode === "signup"
               ? "Start finding your dream job today."
               : authMode === "signin"
                 ? "Sign in to your dashboard."
-                : "Enter your email to receive a password reset link."}
+                : authMode === "forgot"
+                  ? "Enter your email to receive a password reset link."
+                  : `Enter the 6-digit code sent to ${email}`}
           </p>
         </div>
 
-        {authMode !== "forgot" && (
+        {authMode !== "forgot" && authMode !== "otp" && (
           <>
             {/* Google */}
             <button
@@ -1061,77 +1095,111 @@ function AuthModal({
 
         {/* Form */}
         <form onSubmit={handleAuth} className="flex flex-col gap-4">
-          {[
-            {
-              label: "Email",
-              type: "email",
-              value: email,
-              set: setEmail,
-              icon: <Mail size={16} />,
-              placeholder: "name@example.com",
-            },
-            {
-              label: "Password",
-              type: "password",
-              value: password,
-              set: setPassword,
-              icon: <Lock size={16} />,
-              placeholder: "••••••••",
-              show: authMode !== "forgot",
-            },
-            {
-              label: "Confirm Password",
-              type: "password",
-              value: confirmPassword,
-              set: setConfirmPassword,
-              icon: <Lock size={16} />,
-              placeholder: "••••••••",
-              show: authMode === "signup",
-            },
-          ]
-            .filter((f) => f.show !== false)
-            .map((f) => (
-              <div key={f.label}>
+          {authMode === "otp" ? (
+            <div className="space-y-4">
+              <div>
                 <label className="block text-[11px] font-extrabold text-ink-3 tracking-widest uppercase mb-2">
-                  {f.label}
+                  Verification Code
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-4">
-                    {f.icon}
+                    <Lock size={16} />
                   </div>
                   <input
-                    type={
-                      f.type === "password" && showPassword ? "text" : f.type
-                    }
+                    type="text"
                     required
-                    value={f.value}
-                    onChange={(e) => f.set(e.target.value)}
-                    placeholder={f.placeholder}
-                    className="w-full py-3 pl-11 pr-12 rounded-xl border-2 border-border bg-surface text-sm font-semibold outline-none focus:border-brand transition-colors"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123456"
+                    className="w-full py-3 pl-11 pr-4 rounded-xl border-2 border-border bg-surface text-center tracking-[0.5em] text-lg font-bold outline-none focus:border-brand transition-colors"
                   />
-                  {f.type === "password" && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-4 hover:text-brand transition-colors cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  className="text-[11px] font-bold text-brand hover:underline cursor-pointer"
+                >
+                  Resend Code
+                </button>
+              </div>
+            </div>
+          ) : (
+            [
+              {
+                label: "Email",
+                type: "email",
+                value: email,
+                set: setEmail,
+                icon: <Mail size={16} />,
+                placeholder: "name@example.com",
+              },
+              {
+                label: "Password",
+                type: "password",
+                value: password,
+                set: setPassword,
+                icon: <Lock size={16} />,
+                placeholder: "••••••••",
+                show: authMode !== "forgot",
+              },
+              {
+                label: "Confirm Password",
+                type: "password",
+                value: confirmPassword,
+                set: setConfirmPassword,
+                icon: <Lock size={16} />,
+                placeholder: "••••••••",
+                show: authMode === "signup",
+              },
+            ]
+              .filter((f) => f.show !== false)
+              .map((f) => (
+                <div key={f.label}>
+                  <label className="block text-[11px] font-extrabold text-ink-3 tracking-widest uppercase mb-2">
+                    {f.label}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-4">
+                      {f.icon}
+                    </div>
+                    <input
+                      type={
+                        f.type === "password" && showPassword ? "text" : f.type
+                      }
+                      required
+                      value={f.value}
+                      onChange={(e) => f.set(e.target.value)}
+                      placeholder={f.placeholder}
+                      className="w-full py-3 pl-11 pr-12 rounded-xl border-2 border-border bg-surface text-sm font-semibold outline-none focus:border-brand transition-colors"
+                    />
+                    {f.type === "password" && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-4 hover:text-brand transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    )}
+                  </div>
+                  {f.label === "Password" && authMode === "signin" && (
+                    <div className="flex justify-end mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setAuthMode("forgot")}
+                        className="text-[11px] font-bold text-brand hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                   )}
                 </div>
-                {f.label === "Password" && authMode === "signin" && (
-                  <div className="flex justify-end mt-2">
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode("forgot")}
-                      className="text-[11px] font-bold text-brand hover:underline"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))
+          )}
           <button
             type="submit"
             disabled={loading}
@@ -1146,7 +1214,9 @@ function AuthModal({
                     ? "Create Account"
                     : authMode === "signin"
                       ? "Sign In"
-                      : "Send Reset Link"}
+                      : authMode === "forgot"
+                        ? "Send Reset Link"
+                        : "Verify & Sign In"}
                 </span>
                 <ChevronRight size={18} />
               </>
@@ -1161,6 +1231,13 @@ function AuthModal({
               className="text-brand font-bold hover:underline"
             >
               Back to Sign In
+            </button>
+          ) : authMode === "otp" ? (
+            <button
+              onClick={() => setAuthMode("signup")}
+              className="text-brand font-bold hover:underline"
+            >
+              Back to Sign Up
             </button>
           ) : (
             <>

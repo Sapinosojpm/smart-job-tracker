@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   keywords:
     "job tracker, job alerts, philippines jobs, react jobs, developer jobs, job scraper",
   icons: {
-    icon: "/logo.png",
+    icon: "/jobscoutai.png",
   },
   openGraph: {
     title: "JobScoutAI",

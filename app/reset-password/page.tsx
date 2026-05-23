@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-10">
           <div className="w-14 h-14 mx-auto mb-4 shrink-0 flex items-center justify-center">
             <img
-              src="/logo.png"
+              src="/jobscoutai.png"
               alt="JobScoutAI"
               className="w-full h-full object-contain"
             />

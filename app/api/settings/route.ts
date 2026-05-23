@@ -65,6 +65,9 @@ export async function POST(request: Request) {
       filterOnsite,
       telegramBotToken, 
       telegramChatId, 
+      emailUser,
+      emailPass,
+      emailTo,
       plan 
     } = body;
     const currentSettings = await prisma.settings.findUnique({ where: { userId: user.id } });
@@ -100,6 +103,9 @@ export async function POST(request: Request) {
         filterOnsite,
         telegramBotToken,
         telegramChatId,
+        emailUser,
+        emailPass,
+        emailTo,
         plan: userPlan
       },
       create: {
@@ -124,6 +130,9 @@ export async function POST(request: Request) {
         filterOnsite,
         telegramBotToken,
         telegramChatId,
+        emailUser,
+        emailPass,
+        emailTo,
         plan: userPlan
       }
     });
