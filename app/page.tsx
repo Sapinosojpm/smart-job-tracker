@@ -643,19 +643,21 @@ function HeroSection({
   );
 }
 
-const PLATFORMS = [
-  "We Work Remotely",
-  "Wellfound",
-  "Working Nomads",
-  "Remote.co",
-  "Jobspresso",
-  "NoDesk",
-  "SkipTheDrive",
-  "Remote Rocketship",
-  "DailyRemote",
-  "Otta",
-  "OnlineJobs.ph",
-  "RemoteOK",
+const BRAND_PLATFORMS = [
+  { name: "We Work Remotely", icon: <Briefcase size={12} className="text-rose-500" />, border: "group-hover:border-rose-300/60", bg: "group-hover:bg-rose-500/5", shadow: "group-hover:shadow-rose-500/10" },
+  { name: "Wellfound", icon: <Target size={12} className="text-emerald-500" />, border: "group-hover:border-emerald-300/60", bg: "group-hover:bg-emerald-500/5", shadow: "group-hover:shadow-emerald-500/10" },
+  { name: "Remote.co", icon: <Globe size={12} className="text-blue-500" />, border: "group-hover:border-blue-300/60", bg: "group-hover:bg-blue-500/5", shadow: "group-hover:shadow-blue-500/10" },
+  { name: "Upwork", icon: <Sparkles size={12} className="text-green-600" />, border: "group-hover:border-green-300/60", bg: "group-hover:bg-green-500/5", shadow: "group-hover:shadow-green-500/10" },
+  { name: "Indeed", icon: <Search size={12} className="text-indigo-500" />, border: "group-hover:border-indigo-300/60", bg: "group-hover:bg-indigo-500/5", shadow: "group-hover:shadow-indigo-500/10" },
+  { name: "Working Nomads", icon: <Users size={12} className="text-cyan-550" />, border: "group-hover:border-cyan-300/60", bg: "group-hover:bg-cyan-500/5", shadow: "group-hover:shadow-cyan-500/10" },
+  { name: "Jobspresso", icon: <Zap size={12} className="text-amber-500" />, border: "group-hover:border-amber-300/60", bg: "group-hover:bg-amber-500/5", shadow: "group-hover:shadow-amber-500/10" },
+  { name: "NoDesk", icon: <Clock size={12} className="text-slate-500" />, border: "group-hover:border-slate-300/60", bg: "group-hover:bg-slate-500/5", shadow: "group-hover:shadow-slate-500/10" },
+  { name: "SkipTheDrive", icon: <TrendingUp size={12} className="text-teal-500" />, border: "group-hover:border-teal-300/60", bg: "group-hover:bg-teal-500/5", shadow: "group-hover:shadow-teal-500/10" },
+  { name: "Remote Rocketship", icon: <Send size={12} className="text-purple-500" />, border: "group-hover:border-purple-300/60", bg: "group-hover:bg-purple-500/5", shadow: "group-hover:shadow-purple-500/10" },
+  { name: "DailyRemote", icon: <Shield size={12} className="text-orange-500" />, border: "group-hover:border-orange-300/60", bg: "group-hover:bg-orange-500/5", shadow: "group-hover:shadow-orange-500/10" },
+  { name: "Otta", icon: <BarChart3 size={12} className="text-fuchsia-500" />, border: "group-hover:border-fuchsia-300/60", bg: "group-hover:bg-fuchsia-500/5", shadow: "group-hover:shadow-fuchsia-500/10" },
+  { name: "OnlineJobs.ph", icon: <Star size={12} className="text-sky-500" />, border: "group-hover:border-sky-300/60", bg: "group-hover:bg-sky-500/5", shadow: "group-hover:shadow-sky-500/10" },
+  { name: "RemoteOK", icon: <Zap size={12} className="text-yellow-500" />, border: "group-hover:border-yellow-300/60", bg: "group-hover:bg-yellow-500/5", shadow: "group-hover:shadow-yellow-500/10" }
 ];
 
 function LogoMarquee() {
@@ -665,52 +667,484 @@ function LogoMarquee() {
     setMounted(true);
   }, []);
 
-  const doubled = [...PLATFORMS, ...PLATFORMS, ...PLATFORMS, ...PLATFORMS];
-
   if (!mounted) {
-    return <section className="bg-ink py-7 h-[84px]" />; // Placeholder during SSR
+    return <section className="bg-[#0a0f1d] py-16 h-[220px]" />;
   }
 
+  const row1 = BRAND_PLATFORMS.slice(0, 7);
+  const row2 = BRAND_PLATFORMS.slice(7);
+
+  const doubledRow1 = [...row1, ...row1, ...row1, ...row1, ...row1];
+  const doubledRow2 = [...row2, ...row2, ...row2, ...row2, ...row2];
+
   return (
-    <section className="bg-ink py-7 overflow-hidden relative">
-      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-ink to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-ink to-transparent z-10 pointer-events-none" />
-      <div className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/40 text-center mb-5">
-        Scraping top platforms for you
+    <section className="bg-gradient-to-b from-[#0a0f1d] to-[#0f172a] py-16 overflow-hidden relative border-y border-slate-900">
+      {/* Side Vignette Fades */}
+      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0f1d] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0f1d] to-transparent z-10 pointer-events-none" />
+      
+      {/* Title */}
+      <div className="text-[11px] font-black tracking-[0.25em] uppercase text-slate-500 text-center mb-10 select-none">
+        🔗 Scraping Top Platforms For You
       </div>
-      <div className="overflow-hidden">
-        <div className="flex gap-16 items-center animate-marquee hover:[animation-play-state:paused] w-max cursor-default select-none">
-          {/* Track A */}
-          <div className="flex gap-16 items-center shrink-0">
-            {doubled.map((p, i) => (
-              <div
-                key={`a-${p}-${i}`}
-                className="flex items-center gap-2.5 whitespace-nowrap"
-              >
-                <div className="w-2 h-2 rounded-full bg-accent" />
-                <span className="font-display text-base font-bold text-white/70 transition-colors duration-300 hover:text-accent">
-                  {p}
-                </span>
-              </div>
-            ))}
+      
+      <div className="space-y-6 max-w-[1400px] mx-auto">
+        {/* Row 1 (Right to Left) */}
+        <div className="overflow-hidden">
+          <div className="flex gap-4 items-center animate-marquee w-max cursor-default">
+            {/* Track A */}
+            <div className="flex gap-4 items-center shrink-0">
+              {doubledRow1.map((p, i) => (
+                <div
+                  key={`r1-a-${p.name}-${i}`}
+                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                >
+                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
+                    {p.icon}
+                  </div>
+                  <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {/* Track B */}
+            <div className="flex gap-4 items-center shrink-0" aria-hidden="true">
+              {doubledRow1.map((p, i) => (
+                <div
+                  key={`r1-b-${p.name}-${i}`}
+                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                >
+                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
+                    {p.icon}
+                  </div>
+                  <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          {/* Track B (Identical clone for perfect gapless looping) */}
-          <div className="flex gap-16 items-center shrink-0" aria-hidden="true">
-            {doubled.map((p, i) => (
-              <div
-                key={`b-${p}-${i}`}
-                className="flex items-center gap-2.5 whitespace-nowrap"
-              >
-                <div className="w-2 h-2 rounded-full bg-accent" />
-                <span className="font-display text-base font-bold text-white/70 transition-colors duration-300 hover:text-accent">
-                  {p}
-                </span>
-              </div>
-            ))}
+        </div>
+
+        {/* Row 2 (Left to Right) */}
+        <div className="overflow-hidden">
+          <div className="flex gap-4 items-center animate-marquee-reverse w-max cursor-default">
+            {/* Track A */}
+            <div className="flex gap-4 items-center shrink-0">
+              {doubledRow2.map((p, i) => (
+                <div
+                  key={`r2-a-${p.name}-${i}`}
+                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                >
+                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
+                    {p.icon}
+                  </div>
+                  <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {/* Track B */}
+            <div className="flex gap-4 items-center shrink-0" aria-hidden="true">
+              {doubledRow2.map((p, i) => (
+                <div
+                  key={`r2-b-${p.name}-${i}`}
+                  className={`group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-slate-800 transition-all duration-300 hover:scale-[1.03] select-none hover:bg-white/[0.05] ${p.border} ${p.bg} ${p.shadow}`}
+                >
+                  <div className="flex items-center justify-center w-5 h-5 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:scale-105 transition-all">
+                    {p.icon}
+                  </div>
+                  <span className="font-body text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
+                    {p.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ─── Features Section Interactive Sub-Widgets ─────────────────── */
+
+function ScrapingLogWidget() {
+  const [logs, setLogs] = useState<string[]>([
+    "Indeed: scanned 150 jobs (+12 new)",
+    "We Work Remotely: scanned 45 jobs (+3 new)",
+    "RemoteOK: scanned 90 jobs (+5 new)",
+  ]);
+  
+  useEffect(() => {
+    const platforms = ["Indeed", "We Work Remotely", "RemoteOK", "JobStreet", "LinkedIn", "Wellfound", "Remote.co"];
+    const keywords = ["React", "Node", "Python", "UI/UX", "Data Analyst", "Product Manager"];
+    
+    const timer = setInterval(() => {
+      const p = platforms[Math.floor(Math.random() * platforms.length)];
+      const k = keywords[Math.floor(Math.random() * keywords.length)];
+      const count = Math.floor(Math.random() * 80) + 10;
+      const newJobs = Math.floor(Math.random() * 5);
+      const log = `${p}: scanned ${count} ${k} jobs (+${newJobs} new)`;
+      setLogs((prev) => [...prev.slice(-2), log]);
+    }, 3000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="w-full bg-slate-900 rounded-2xl p-4 font-mono text-[10px] text-emerald-400 space-y-1.5 border border-slate-850 shadow-inner h-[100px] overflow-hidden flex flex-col justify-end">
+      {logs.map((log, i) => (
+        <div key={i} className="whitespace-nowrap flex items-center gap-1.5 animate-fadeIn">
+          <span className="text-slate-500 font-bold select-none">&gt;</span>
+          <span className={i === logs.length - 1 ? "text-emerald-300 font-bold" : "opacity-60"}>{log}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FilterSandboxWidget() {
+  const [selectedTags, setSelectedTags] = useState<string[]>(["React", "Remote"]);
+  const allTags = ["React", "Remote", "PHP", "Salary > ₱80k", "Senior"];
+  
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const getJobCount = () => {
+    if (selectedTags.length === 0) return 415;
+    let count = 415;
+    if (selectedTags.includes("React")) count = Math.floor(count * 0.3);
+    if (selectedTags.includes("Remote")) count = Math.floor(count * 0.6);
+    if (selectedTags.includes("PHP")) count = Math.floor(count * 0.15);
+    if (selectedTags.includes("Salary > ₱80k")) count = Math.floor(count * 0.4);
+    if (selectedTags.includes("Senior")) count = Math.floor(count * 0.35);
+    return Math.max(2, count);
+  };
+
+  return (
+    <div className="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-3 shadow-inner text-left h-[100px] flex flex-col justify-between">
+      <div className="flex flex-wrap gap-1.5">
+        {allTags.map((tag) => {
+          const isSelected = selectedTags.includes(tag);
+          return (
+            <button
+              key={tag}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTag(tag);
+              }}
+              className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all select-none ${
+                isSelected 
+                  ? "bg-purple-600 text-white shadow-sm shadow-purple-600/10" 
+                  : "bg-white border border-slate-200 text-slate-500 hover:border-slate-300"
+              }`}
+            >
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between border-t border-slate-200/50 pt-2 text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none select-none">
+        <span>AI Filter Matches</span>
+        <span className="text-purple-600 font-extrabold text-xs">
+          {getJobCount()} listings
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AlertNotificationWidget() {
+  const [bubbleText, setBubbleText] = useState("React Developer found at Canva!");
+  const [bubbleSalary, setBubbleSalary] = useState("₱90k - ₱120k / mo");
+  const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    const roles = [
+      { r: "React Developer found at Canva!", s: "₱90k - ₱120k / mo" },
+      { r: "Virtual Assistant found at HubSpot!", s: "$1,500 - $2,500 / mo" },
+      { r: "NodeJS Engineer found at Wise!", s: "£4,500 - £6,000 / mo" },
+      { r: "Product Designer found at Figma!", s: "$80k - $110k / yr" }
+    ];
+    const timer = setInterval(() => {
+      const role = roles[Math.floor(Math.random() * roles.length)];
+      setBubbleText(role.r);
+      setBubbleSalary(role.s);
+      setKey(prev => prev + 1);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="w-full bg-[#182533] rounded-2xl p-3 border border-slate-800 shadow-inner flex gap-2.5 items-start text-left h-[100px] overflow-hidden">
+      <div className="w-8 h-8 rounded-full bg-sky-500 shrink-0 flex items-center justify-center text-white shadow-md select-none">
+        <Send size={13} className="fill-white translate-x-[-0.5px] translate-y-[0.5px]" />
+      </div>
+      <div key={key} className="flex-1 min-w-0 animate-fadeIn">
+        <div className="flex items-center justify-between gap-1 mb-1">
+          <span className="text-[9px] font-black text-sky-400 uppercase tracking-wider">JobScoutAI Bot</span>
+          <span className="text-[8px] text-slate-500 font-semibold select-none">just now</span>
+        </div>
+        <div className="bg-[#202f3e] rounded-2xl rounded-tl-none p-2.5 text-[10px] text-slate-200 font-semibold leading-relaxed shadow-sm">
+          <p className="font-extrabold truncate text-white leading-tight">{bubbleText}</p>
+          <p className="text-[8px] text-sky-300 font-bold mt-0.5 leading-none">{bubbleSalary} • Remote</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KanbanPipelineWidget() {
+  const [stage, setStage] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStage((prev) => (prev + 1) % 3);
+    }, 2500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const jobs = [
+    { title: "Frontend Dev", company: "Canva" },
+    { title: "UI Designer", company: "Figma" },
+    { title: "React Dev", company: "Google" }
+  ];
+
+  return (
+    <div className="w-full grid grid-cols-3 gap-2 bg-slate-50 rounded-2xl p-3 border border-slate-200/60 shadow-inner h-[100px] overflow-hidden text-center select-none">
+      {["Saved", "Applied", "Offer"].map((column, colIdx) => (
+        <div key={column} className="flex flex-col gap-1.5 h-full">
+          <span className={`text-[8px] font-black uppercase tracking-wider ${
+            colIdx === stage ? "text-amber-600" : "text-slate-400"
+          }`}>
+            {column}
+          </span>
+          <div className={`flex-1 rounded-xl border border-dashed transition-all flex flex-col items-center justify-center p-1 ${
+            colIdx === stage 
+              ? "bg-amber-50 border-amber-300/60 shadow-sm" 
+              : "bg-white/80 border-slate-200"
+          }`}>
+            {colIdx === stage ? (
+              <div className="w-full rounded-lg bg-white border border-amber-200 p-1.5 shadow-sm animate-in zoom-in-95 duration-300 text-left">
+                <div className="text-[9px] font-black text-slate-800 truncate leading-tight">
+                  {jobs[stage].title}
+                </div>
+                <div className="text-[7px] font-bold text-slate-400 truncate leading-none mt-0.5">
+                  {jobs[stage].company}
+                </div>
+              </div>
+            ) : (
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SalaryInsightWidget() {
+  const [activePoint, setActivePoint] = useState(2);
+  const data = [
+    { year: "2023", value: 65 },
+    { year: "2024", value: 85 },
+    { year: "2025", value: 110 },
+    { year: "2026", value: 130 }
+  ];
+
+  return (
+    <div className="w-full bg-slate-50 rounded-2xl p-3 border border-slate-200/60 shadow-inner h-[100px] flex flex-col justify-between text-left select-none">
+      <div className="flex justify-between items-center shrink-0">
+        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Market Trend</span>
+        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+          ₱{data[activePoint].value}k/mo Avg
+        </span>
+      </div>
+      <div className="flex-1 flex items-end justify-between px-2 pt-2 gap-3">
+        {data.map((item, i) => {
+          const heightPercent = (item.value / 140) * 100;
+          const isActive = i === activePoint;
+          return (
+            <div 
+              key={item.year}
+              onMouseEnter={() => setActivePoint(i)}
+              className="flex-1 flex flex-col items-center cursor-pointer group/bar"
+            >
+              <div className="w-full relative flex items-end h-[42px]">
+                <div 
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-md transition-all duration-500 ${
+                    isActive 
+                      ? "bg-gradient-to-t from-emerald-500 to-teal-400 shadow-md shadow-emerald-500/20" 
+                      : "bg-slate-200 group-hover/bar:bg-slate-300"
+                  }`}
+                />
+              </div>
+              <span className={`text-[7px] font-black uppercase tracking-wider mt-1 ${
+                isActive ? "text-emerald-600" : "text-slate-400"
+              }`}>
+                {item.year}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ScamClassifierWidget() {
+  const [scamState, setScamState] = useState<'idle' | 'scanning' | 'done'>('idle');
+  const [scamType, setScamType] = useState(0);
+
+  const posts = [
+    { title: "Virtual Assistant (Urgent)", desc: "Pay $50 for laptop shipping fee...", isScam: true },
+    { title: "React Dev (Part-Time)", desc: "100% remote. Apply directly at Figma...", isScam: false }
+  ];
+
+  const handleScan = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setScamState('scanning');
+    setTimeout(() => {
+      setScamState('done');
+    }, 1500);
+  };
+
+  const handleReset = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setScamState('idle');
+    setScamType(prev => (prev + 1) % 2);
+  };
+
+  return (
+    <div className="w-full bg-slate-50 rounded-2xl p-3 border border-slate-200/60 shadow-inner h-[100px] flex flex-col justify-between text-left relative overflow-hidden select-none">
+      {scamState === 'idle' && (
+        <div className="flex flex-col justify-between h-full w-full">
+          <div className="min-w-0">
+            <div className="text-[9px] font-black text-slate-800 leading-tight truncate">{posts[scamType].title}</div>
+            <div className="text-[8px] text-slate-400 font-semibold truncate leading-none mt-0.5">{posts[scamType].desc}</div>
+          </div>
+          <button 
+            onClick={handleScan}
+            className="w-full py-1.5 rounded-xl bg-red-600 text-white font-extrabold text-[8px] uppercase tracking-widest text-center shadow-md shadow-red-500/10 active:scale-95 transition-all"
+          >
+            🛡️ Scan Listing
+          </button>
+        </div>
+      )}
+
+      {scamState === 'scanning' && (
+        <div className="flex flex-col items-center justify-center h-full w-full gap-2">
+          <Loader2 size={16} className="text-red-500 animate-spin" />
+          <span className="text-[8px] font-black text-red-600 uppercase tracking-widest animate-pulse">Analyzing...</span>
+        </div>
+      )}
+
+      {scamState === 'done' && (
+        <div className="flex flex-col justify-between h-full w-full items-center text-center">
+          <div className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 mt-2 ${
+            posts[scamType].isScam ? "text-red-600" : "text-emerald-600"
+          }`}>
+            {posts[scamType].isScam ? "🚨 SCAM DETECTED" : "✅ VERIFIED EMPLOYER"}
+          </div>
+          <button 
+            onClick={handleReset}
+            className="w-full py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-600 font-black text-[7px] uppercase tracking-widest transition-colors mt-2"
+          >
+            Reset Scanner
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeatureCard({ f }: { f: any }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setCoords({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const getStyle = (): React.CSSProperties => {
+    if (!isHovered || !cardRef.current) return { transform: 'none', transition: 'all 0.5s ease' };
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = (centerY - coords.y) / 20;
+    const rotateY = (coords.x - centerX) / 20;
+    
+    return {
+      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
+      transition: 'transform 0.1s ease-out, box-shadow 0.3s ease',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.06)'
+    };
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setCoords({ x: 0, y: 0 });
+      }}
+      style={getStyle()}
+      className="group p-8 rounded-[24px] border border-border bg-white hover:border-brand/30 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[360px]"
+    >
+      {/* Dynamic spotlight gradient */}
+      {isHovered && (
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(180px circle at ${coords.x}px ${coords.y}px, rgba(26, 86, 219, 0.04), transparent 80%)`,
+          }}
+        />
+      )}
+
+      {/* Top elements */}
+      <div className="w-full relative">
+        {/* Tag */}
+        <div
+          className={`absolute top-0 right-0 text-[10px] font-black tracking-wider uppercase ${f.color} ${f.bg} px-2.5 py-0.5 rounded-full select-none`}
+        >
+          {f.tag}
+        </div>
+        {/* Icon */}
+        <div
+          className={`w-[52px] h-[52px] rounded-xl ${f.bg} flex items-center justify-center ${f.color} mb-5 group-hover:scale-105 transition-transform`}
+        >
+          {f.icon}
+        </div>
+        <h3 className="font-display text-lg font-bold text-ink mb-2.5">
+          {f.title}
+        </h3>
+        <p className="text-sm text-ink-3 leading-relaxed font-medium mb-6">
+          {f.desc}
+        </p>
+      </div>
+
+      {/* Interactive Micro-Widget at the bottom */}
+      <div className="w-full mt-auto pt-2 z-10">
+        {f.widget}
+      </div>
+    </div>
   );
 }
 
@@ -723,6 +1157,7 @@ function FeaturesSection() {
       title: "Automated Daily Scraping",
       desc: "Our bots run every 4 hours across 5 top job platforms so fresh listings land in your dashboard before anyone else.",
       tag: "Core",
+      widget: <ScrapingLogWidget />
     },
     {
       icon: <Filter size={24} />,
@@ -731,6 +1166,7 @@ function FeaturesSection() {
       title: "AI-Powered Smart Filtering",
       desc: "Define your ideal role with keywords, salary, and location. We surface only the jobs that truly fit.",
       tag: "AI",
+      widget: <FilterSandboxWidget />
     },
     {
       icon: <Bell size={24} />,
@@ -739,6 +1175,7 @@ function FeaturesSection() {
       title: "Instant Email & Telegram Alerts",
       desc: "Get notified within minutes of a new match via your preferred channel. Be the first to apply.",
       tag: "Alerts",
+      widget: <AlertNotificationWidget />
     },
     {
       icon: <BarChart3 size={24} />,
@@ -747,6 +1184,7 @@ function FeaturesSection() {
       title: "Application Dashboard",
       desc: 'Track every application in one place — from "Saved" to "Offer Received" — with timeline per role.',
       tag: "Dashboard",
+      widget: <KanbanPipelineWidget />
     },
     {
       icon: <TrendingUp size={24} />,
@@ -755,6 +1193,7 @@ function FeaturesSection() {
       title: "Market Salary Insights",
       desc: "See real-time salary data for your target roles so you always negotiate from a position of knowledge.",
       tag: "Analytics",
+      widget: <SalaryInsightWidget />
     },
     {
       icon: <Shield size={24} />,
@@ -763,6 +1202,7 @@ function FeaturesSection() {
       title: "Scam Job Detection",
       desc: "Our classifier flags suspicious listings before they waste your time, keeping only verified employers.",
       tag: "Safety",
+      widget: <ScamClassifierWidget />
     },
   ];
 
@@ -786,29 +1226,7 @@ function FeaturesSection() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f) => (
-            <div
-              key={f.title}
-              className="group p-8 rounded-[24px] border border-border bg-white hover:border-brand/30 hover:shadow-premium-lg transition-all duration-300 relative overflow-hidden"
-            >
-              {/* Tag */}
-              <div
-                className={`absolute top-5 right-5 text-[11px] font-bold tracking-wider uppercase ${f.color} ${f.bg} px-2.5 py-0.5 rounded-full`}
-              >
-                {f.tag}
-              </div>
-              {/* Icon */}
-              <div
-                className={`w-[52px] h-[52px] rounded-xl ${f.bg} flex items-center justify-center ${f.color} mb-5 group-hover:scale-110 transition-transform`}
-              >
-                {f.icon}
-              </div>
-              <h3 className="font-display text-lg font-bold text-ink mb-2.5">
-                {f.title}
-              </h3>
-              <p className="text-sm text-ink-3 leading-relaxed font-medium">
-                {f.desc}
-              </p>
-            </div>
+            <FeatureCard key={f.title} f={f} />
           ))}
         </div>
       </div>

@@ -97,6 +97,7 @@
   --animate-fade-up: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-spin-slow: spin-slow 3s linear infinite;
   --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 30s linear infinite;
   --animate-shimmer: shimmer 3s linear infinite;
   --animate-bounce-slow: bounce 3s ease-in-out infinite;
   --animate-fadeIn: fadeIn 0.3s ease-out both;
@@ -130,6 +131,16 @@
 
     to {
       transform: translateX(-50%);
+    }
+  }
+
+  @keyframes marquee-reverse {
+    from {
+      transform: translateX(-50%);
+    }
+
+    to {
+      transform: translateX(0);
     }
   }
 
@@ -230,7 +241,9 @@
 
 /* Pause marquee on hover */
 .animate-marquee:hover,
-.animate-marquee:hover * {
+.animate-marquee:hover *,
+.animate-marquee-reverse:hover,
+.animate-marquee-reverse:hover * {
   animation-play-state: paused !important;
 }
 
