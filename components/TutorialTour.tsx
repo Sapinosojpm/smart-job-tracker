@@ -211,7 +211,7 @@ export default function TutorialTour({ isOpen, onClose }: TutorialTourProps) {
     <div className="fixed inset-0 z-[400] overflow-y-auto">
       {/* Semi-transparent backdrop overlay */}
       <div 
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-[2px] transition-opacity duration-300"
+        className="fixed inset-0 bg-slate-950/60 transition-opacity duration-300"
         onClick={handleSkip}
       />
 
