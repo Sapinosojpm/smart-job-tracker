@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Check, Loader2, ArrowRight, ArrowLeft, Star, Zap, Rocket, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
@@ -14,6 +14,26 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
   const [checkoutStep, setCheckoutStep] = useState<'PLANS' | 'PAYMENT'>('PLANS');
   const [selectedPlan, setSelectedPlan] = useState<'PRO' | 'TEAM' | null>(null);
   const [payMongoLoading, setPayMongoLoading] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<'FREE' | 'PRO' | 'TEAM'>('FREE');
+  const [loadingPlan, setLoadingPlan] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchPlan = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success && data.data?.plan) {
+          setCurrentPlan(data.data.plan);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user plan:', err);
+      } finally {
+        setLoadingPlan(false);
+      }
+    };
+    fetchPlan();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -51,17 +71,20 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
     {
       id: 'FREE', name: 'Free', price: '₱0', period: '', icon: <Zap size={16} />,
       features: ['50 jobs/day scrape', '1 job alert filter', 'Email alerts', 'Basic dashboard'],
-      cta: 'Current Plan', recommended: false,
+      cta: currentPlan === 'FREE' ? 'Current Plan' : 'Free',
+      disabled: true, recommended: false,
     },
     {
       id: 'PRO', name: 'Pro', price: '₱99', period: '/mo', icon: <Star size={16} />,
       features: ['Unlimited scraping', '10 smart filters', 'Telegram alerts', 'Salary insights', 'Priority support'],
-      cta: 'Upgrade Now', recommended: true,
+      cta: currentPlan === 'PRO' ? 'Current Plan' : 'Upgrade Now',
+      disabled: currentPlan === 'PRO' || currentPlan === 'TEAM', recommended: true,
     },
     {
       id: 'TEAM', name: 'Elite', price: '₱199', period: '/mo', icon: <Rocket size={16} />,
       features: ['Everything in Pro', 'AI Resume Tailoring', 'Scam Shield Pro', 'Instant Refresh', 'Elite Insights'],
-      cta: 'Go Elite', recommended: false,
+      cta: currentPlan === 'TEAM' ? 'Current Plan' : 'Go Elite',
+      disabled: currentPlan === 'TEAM', recommended: false,
     },
   ];
 
@@ -117,15 +140,19 @@ export default function PlanModal({ isOpen, onClose }: PlanModalProps) {
 
                   <button
                     onClick={() => handleUpgradeSelect(p.id)}
-                    disabled={p.id === 'FREE'}
+                    disabled={p.disabled}
                     className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 text-[12px] font-bold transition-all ${
-                      p.recommended 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200' 
-                        : p.id === 'FREE' ? 'bg-slate-50 text-slate-300' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                      currentPlan === p.id
+                        ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-default'
+                        : p.recommended
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 cursor-pointer'
+                        : p.disabled
+                        ? 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
                     }`}
                   >
                     <span>{p.cta}</span>
-                    {p.id !== 'FREE' && <ArrowRight size={14} />}
+                    {!p.disabled && <ArrowRight size={14} />}
                   </button>
                 </div>
               ))}
