@@ -13,6 +13,7 @@ type JobDocumentPdfProps = {
   resumeData: ResumeData;
   letterData: LetterData;
   generatedDate: string;
+  template?: 'classic' | 'modern' | 'minimal';
 };
 
 const styles = StyleSheet.create({
@@ -231,35 +232,53 @@ function getLetterParagraphs(content: string) {
     .filter(Boolean);
 }
 
-function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
+function ResumePdf({ resumeData, template }: { resumeData: ResumeData; template: 'classic' | 'modern' | 'minimal' }) {
   const skillEntries = Object.entries(resumeData.skills).filter(([, value]) =>
     value.trim(),
   );
 
+  const isSerif = template === 'classic';
+  const isModern = template === 'modern';
+  const fontFam = isSerif ? "Times-Roman" : "Helvetica";
+  const fontFamBold = isSerif ? "Times-Bold" : "Helvetica-Bold";
+  const fontFamItalic = isSerif ? "Times-Italic" : "Helvetica-Oblique";
+
+  const tStyle = (style: any) => [style, { fontFamily: fontFam }];
+  const tStyleBold = (style: any) => [style, { fontFamily: fontFamBold }];
+  const tStyleItalic = (style: any) => [style, { fontFamily: fontFamItalic }];
+
   return (
     <View style={styles.resumeRoot}>
-      <View style={styles.resumeHeader}>
-        <Text style={styles.resumeName}>{resumeData.fullName}</Text>
-        <Text style={styles.contactLine}>
+      <View style={[styles.resumeHeader, { alignItems: isSerif ? "center" : "flex-start", textAlign: isSerif ? "center" : "left" }]}>
+        <Text style={[styles.resumeName, { fontFamily: fontFamBold }]}>{resumeData.fullName}</Text>
+        <Text style={tStyle(styles.contactLine)}>
           {joinLine([resumeData.location, resumeData.email, resumeData.phone])}
         </Text>
-        <Text style={styles.contactLine}>
+        <Text style={tStyle(styles.contactLine)}>
           {joinLine([resumeData.github, resumeData.linkedin])}
         </Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Technical Summary</Text>
-        <Text style={styles.paragraph}>{resumeData.summary}</Text>
+        <Text style={[styles.sectionTitle, { 
+          fontFamily: fontFamBold, 
+          color: isModern ? '#2563eb' : '#1e293b', 
+          borderBottomColor: isModern ? '#2563eb' : '#1e293b' 
+        }]}>Technical Summary</Text>
+        <Text style={tStyle(styles.paragraph)}>{resumeData.summary}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Technical Skills</Text>
+        <Text style={[styles.sectionTitle, { 
+          fontFamily: fontFamBold, 
+          color: isModern ? '#2563eb' : '#1e293b', 
+          borderBottomColor: isModern ? '#2563eb' : '#1e293b' 
+        }]}>Technical Skills</Text>
         <View style={styles.skillList}>
           {skillEntries.map(([key, value]) => (
             <View key={key} style={styles.skillRow}>
-              <Text style={styles.skillLabel}>{formatSkillLabel(key)}:</Text>
-              <Text style={styles.skillValue}>{value}</Text>
+              <Text style={tStyleBold(styles.skillLabel)}>{formatSkillLabel(key)}:</Text>
+              <Text style={tStyle(styles.skillValue)}>{value}</Text>
             </View>
           ))}
         </View>
@@ -267,7 +286,11 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.experience && resumeData.experience.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Experience</Text>
+          <Text style={[styles.sectionTitle, { 
+            fontFamily: fontFamBold, 
+            color: isModern ? '#2563eb' : '#1e293b', 
+            borderBottomColor: isModern ? '#2563eb' : '#1e293b' 
+          }]}>Experience</Text>
           <View style={styles.entryList}>
             {resumeData.experience.map((exp, index) => (
               <View
@@ -276,10 +299,10 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
                 wrap={false}
               >
                 <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle}>{exp.title}</Text>
-                  <Text style={styles.entryDate}>{exp.date}</Text>
+                  <Text style={tStyleBold(styles.entryTitle)}>{exp.title}</Text>
+                  <Text style={tStyleItalic(styles.entryDate)}>{exp.date}</Text>
                 </View>
-                <Text style={styles.entryCompany}>{exp.company}</Text>
+                <Text style={tStyle(styles.entryCompany)}>{exp.company}</Text>
                 <View style={styles.bulletList}>
                   {exp.bullets
                     .filter((bullet) => bullet.trim())
@@ -288,8 +311,8 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
                         key={`${exp.title}-bullet-${bulletIndex}`}
                         style={styles.bulletRow}
                       >
-                        <Text style={styles.bulletMark}>•</Text>
-                        <Text style={styles.bulletText}>{bullet}</Text>
+                        <Text style={tStyle(styles.bulletMark)}>•</Text>
+                        <Text style={tStyle(styles.bulletText)}>{bullet}</Text>
                       </View>
                     ))}
                 </View>
@@ -301,7 +324,11 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.projects && resumeData.projects.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Projects (Selected)</Text>
+          <Text style={[styles.sectionTitle, { 
+            fontFamily: fontFamBold, 
+            color: isModern ? '#2563eb' : '#1e293b', 
+            borderBottomColor: isModern ? '#2563eb' : '#1e293b' 
+          }]}>Projects (Selected)</Text>
           <View style={styles.entryList}>
             {resumeData.projects.map((project, index) => (
               <View
@@ -309,9 +336,9 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
                 style={styles.entryBlock}
                 wrap={false}
               >
-                <Text style={styles.entryTitleSm}>{project.name}</Text>
+                <Text style={tStyleBold(styles.entryTitleSm)}>{project.name}</Text>
                 {project.link.trim() ? (
-                  <Link src={ensureUrl(project.link)} style={styles.projectLink}>
+                  <Link src={ensureUrl(project.link)} style={tStyle(styles.projectLink)}>
                     {project.link}
                   </Link>
                 ) : null}
@@ -323,8 +350,8 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
                         key={`${project.name}-bullet-${bulletIndex}`}
                         style={styles.bulletRow}
                       >
-                        <Text style={styles.bulletMark}>•</Text>
-                        <Text style={styles.bulletText}>{bullet}</Text>
+                        <Text style={tStyle(styles.bulletMark)}>•</Text>
+                        <Text style={tStyle(styles.bulletText)}>{bullet}</Text>
                       </View>
                     ))}
                 </View>
@@ -336,7 +363,11 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.education && resumeData.education.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Education</Text>
+          <Text style={[styles.sectionTitle, { 
+            fontFamily: fontFamBold, 
+            color: isModern ? '#2563eb' : '#1e293b', 
+            borderBottomColor: isModern ? '#2563eb' : '#1e293b' 
+          }]}>Education</Text>
           <View style={styles.entryList}>
             {resumeData.education.map((education, index) => (
               <View
@@ -345,10 +376,10 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
                 wrap={false}
               >
                 <View>
-                  <Text style={styles.entryTitleSm}>{education.degree}</Text>
-                  <Text style={styles.educationSchool}>{education.school}</Text>
+                  <Text style={tStyleBold(styles.entryTitleSm)}>{education.degree}</Text>
+                  <Text style={tStyle(styles.educationSchool)}>{education.school}</Text>
                 </View>
-                <Text style={styles.entryDate}>{education.date}</Text>
+                <Text style={tStyleBold(styles.entryDate)}>{education.date}</Text>
               </View>
             ))}
           </View>
@@ -362,44 +393,61 @@ function CoverLetterPdf({
   generatedDate,
   letterData,
   resumeData,
+  template,
 }: {
   generatedDate: string;
   letterData: LetterData;
   resumeData: ResumeData;
+  template: 'classic' | 'modern' | 'minimal';
 }) {
   const paragraphs = getLetterParagraphs(letterData.content);
 
+  const isSerif = template === 'classic';
+  const isModern = template === 'modern';
+  const fontFam = isSerif ? "Times-Roman" : "Helvetica";
+  const fontFamBold = isSerif ? "Times-Bold" : "Helvetica-Bold";
+  const fontFamItalic = isSerif ? "Times-Italic" : "Helvetica-Oblique";
+
+  const tStyle = (style: any) => [style, { fontFamily: fontFam }];
+  const tStyleBold = (style: any) => [style, { fontFamily: fontFamBold }];
+
   return (
-    <View style={styles.coverPage}>
-      <View style={styles.senderHeader}>
-        <Text style={styles.senderName}>{resumeData.fullName}</Text>
-        <Text style={styles.senderText}>{resumeData.location}</Text>
-        <Text style={styles.senderText}>{resumeData.email}</Text>
-        <Text style={styles.senderText}>{resumeData.phone}</Text>
-        <Text style={styles.senderDate}>{generatedDate}</Text>
+    <View style={[styles.coverPage, { fontFamily: fontFam }]}>
+      <View style={[styles.senderHeader, { 
+        alignItems: isSerif ? "flex-end" : "flex-start",
+        borderLeftWidth: isModern ? 4 : 0,
+        borderLeftColor: '#2563eb',
+        paddingLeft: isModern ? 12 : 0,
+        borderBottomWidth: isSerif ? 1 : 0
+      }]}>
+        <Text style={[styles.senderName, { fontFamily: fontFamBold }]}>{resumeData.fullName}</Text>
+        <Text style={tStyle(styles.senderText)}>{resumeData.location}</Text>
+        <Text style={tStyle(styles.senderText)}>{resumeData.email}</Text>
+        <Text style={tStyle(styles.senderText)}>{resumeData.phone}</Text>
+        <Text style={[styles.senderDate, { fontFamily: fontFamBold }]}>{generatedDate}</Text>
       </View>
 
       <View style={styles.recipientBlock}>
-        <Text style={styles.recipientLabel}>Recipient Details</Text>
-        {letterData.recipient ? <Text style={styles.recipientName}>{letterData.recipient}</Text> : null}
-        {letterData.role ? <Text style={styles.recipientRole}>{letterData.role}</Text> : null}
+        <Text style={[styles.recipientLabel, { fontFamily: fontFamBold }]}>Recipient Details</Text>
+        {letterData.recipient ? <Text style={[styles.recipientName, { fontFamily: fontFamBold }]}>{letterData.recipient}</Text> : null}
+        {letterData.role ? <Text style={[styles.recipientRole, { fontFamily: fontFamItalic }]}>{letterData.role}</Text> : null}
         {letterData.company && !/confidential|n\/?a|none|not specified|walang company/i.test(letterData.company) ? (
-          <Text style={styles.recipientCompany}>{letterData.company}</Text>
+          <Text style={[styles.recipientCompany, { fontFamily: fontFamBold }]}>{letterData.company}</Text>
         ) : null}
       </View>
 
       <View style={styles.contentBlock}>
         {paragraphs.map((paragraph, index) => (
-          <Text key={`paragraph-${index}`} style={styles.paragraph}>
+          <Text key={`paragraph-${index}`} style={tStyle(styles.paragraph)}>
             {paragraph}
           </Text>
         ))}
       </View>
 
-      <View style={styles.signatureBlock}>
-        <Text style={styles.signoff}>Best Regards,</Text>
-        <Text style={styles.recipientName}>{resumeData.fullName}</Text>
-        <Text style={styles.enclosure}>Enclosure: Resume</Text>
+      <View style={[styles.signatureBlock, { alignItems: isSerif ? "flex-end" : "flex-start" }]}>
+        <Text style={tStyle(styles.signoff)}>Best Regards,</Text>
+        <Text style={[styles.recipientName, { fontFamily: fontFamBold }]}>{resumeData.fullName}</Text>
+        <Text style={[styles.enclosure, { fontFamily: fontFamItalic }]}>Enclosure: Resume</Text>
       </View>
     </View>
   );
@@ -410,6 +458,7 @@ export function JobDocumentPdf({
   generatedDate,
   letterData,
   resumeData,
+  template = 'classic',
 }: JobDocumentPdfProps) {
   const title =
     activeTab === "resume"
@@ -420,12 +469,13 @@ export function JobDocumentPdf({
     <Document author={resumeData.fullName} creator="JobScoutAI" title={title}>
       <Page size="LETTER" style={styles.page}>
         {activeTab === "resume" ? (
-          <ResumePdf resumeData={resumeData} />
+          <ResumePdf resumeData={resumeData} template={template} />
         ) : (
           <CoverLetterPdf
             generatedDate={generatedDate}
             letterData={letterData}
             resumeData={resumeData}
+            template={template}
           />
         )}
       </Page>

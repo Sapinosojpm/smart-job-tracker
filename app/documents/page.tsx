@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import PlanModal from '@/components/PlanModal';
+import { createClient } from '@/utils/supabase/client';
 import type { DocType, LetterData, ResumeData } from '@/lib/document-types';
 import { 
   PenTool, 
@@ -28,6 +29,7 @@ import {
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<DocType>('resume');
+  const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'minimal'>('classic');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,6 +45,20 @@ export default function DocumentsPage() {
         }
       })
       .catch(() => {});
+
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setResumeData(prev => ({
+          ...prev,
+          fullName: user.user_metadata?.full_name || prev.fullName || '',
+          email: user.email || prev.email || '',
+          phone: user.phone || user.user_metadata?.phone || prev.phone || ''
+        }));
+      }
+    };
+    fetchUser().catch(console.error);
   }, []);
 
   // Resume State
@@ -241,6 +257,7 @@ export default function DocumentsPage() {
           generatedDate={generatedDate}
           letterData={letterData}
           resumeData={resumeData}
+          template={selectedTemplate}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -863,6 +880,63 @@ export default function DocumentsPage() {
                       />
                     </div>
                   </div>
+
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-xs shrink-0 shadow-sm border border-blue-100/50">
+                      02
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Candidate Details</h4>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Your contact details shown on the cover letter header</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <User size={12} className="text-slate-400" />
+                        Full Name
+                      </label>
+                      <input 
+                        value={resumeData.fullName} 
+                        onChange={e => setResumeData({...resumeData, fullName: e.target.value})} 
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <MapPin size={12} className="text-slate-400" />
+                        Location
+                      </label>
+                      <input 
+                        value={resumeData.location} 
+                        onChange={e => setResumeData({...resumeData, location: e.target.value})} 
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <Mail size={12} className="text-slate-400" />
+                        Email Address
+                      </label>
+                      <input 
+                        value={resumeData.email} 
+                        onChange={e => setResumeData({...resumeData, email: e.target.value})} 
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <Phone size={12} className="text-slate-400" />
+                        Phone Number
+                      </label>
+                      <input 
+                        value={resumeData.phone} 
+                        onChange={e => setResumeData({...resumeData, phone: e.target.value})} 
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                  </div>
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between ml-1">
@@ -914,9 +988,23 @@ export default function DocumentsPage() {
         {/* Preview Side */}
         <div className="sticky top-10 animate-in slide-in-from-right duration-700 delay-150 print:static print:w-full">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 print:hidden">
-             <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Document Preview</span>
+             <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Document Preview</span>
+                </div>
+                <div className="flex items-center gap-1.5 border-l border-slate-200 pl-4">
+                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Template:</span>
+                   <select 
+                     value={selectedTemplate} 
+                     onChange={e => setSelectedTemplate(e.target.value as any)}
+                     className="bg-slate-50 border-2 border-slate-100 text-[10px] font-black uppercase tracking-wider rounded-xl px-2.5 py-1.5 outline-none cursor-pointer text-slate-600 focus:border-blue-500 transition-all"
+                   >
+                     <option value="classic">Classic Serif</option>
+                     <option value="modern">Modern Sans</option>
+                     <option value="minimal">Minimalist</option>
+                   </select>
+                </div>
              </div>
              
              <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -948,18 +1036,18 @@ export default function DocumentsPage() {
           <div id="resume-preview" className="aspect-[1/1.41] w-full bg-white rounded-3xl shadow-2xl shadow-slate-300/40 p-10 md:p-12 relative overflow-hidden group/paper text-black overflow-y-auto print:shadow-none print:p-0 print:m-0 print:w-full print:h-full print:rounded-none border border-slate-100/50">
             {/* Real Professional Layout */}
             {activeTab === 'resume' ? (
-              <div className="space-y-6 text-[11px] leading-[1.3] font-serif">
+              <div className={`space-y-6 text-[11px] leading-[1.3] ${selectedTemplate === 'classic' ? 'font-serif' : 'font-sans'}`}>
                 {/* Header */}
-                <div className="text-center space-y-1">
+                <div className={`${selectedTemplate === 'classic' ? 'text-center' : 'text-left'} space-y-1`}>
                   <h1 className="text-2xl font-bold tracking-tight">{resumeData.fullName}</h1>
-                  <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-slate-600 font-medium">
+                  <div className={`flex flex-wrap ${selectedTemplate === 'classic' ? 'justify-center' : 'justify-start'} items-center gap-x-2 gap-y-1 text-slate-600 font-medium`}>
                     <span>{resumeData.location}</span>
                     <span className="text-slate-300">|</span>
                     <span>{resumeData.email}</span>
                     <span className="text-slate-300">|</span>
                     <span>{resumeData.phone}</span>
                   </div>
-                  <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-slate-600 font-medium">
+                  <div className={`flex flex-wrap ${selectedTemplate === 'classic' ? 'justify-center' : 'justify-start'} items-center gap-x-2 gap-y-1 text-slate-600 font-medium`}>
                     <span>{resumeData.github}</span>
                     <span className="text-slate-300">|</span>
                     <span>{resumeData.linkedin}</span>
@@ -968,7 +1056,7 @@ export default function DocumentsPage() {
 
                 {/* Section: Technical Summary */}
                 <div className="space-y-2">
-                  <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Technical Summary</h2>
+                  <h2 className={`text-[12px] font-bold uppercase tracking-wider border-b ${selectedTemplate === 'modern' ? 'border-blue-600 text-blue-600' : 'border-slate-800'} pb-0.5`}>Technical Summary</h2>
                   <p className="text-justify font-medium text-slate-800">
                     {resumeData.summary}
                   </p>
@@ -976,7 +1064,7 @@ export default function DocumentsPage() {
 
                 {/* Section: Technical Skills */}
                 <div className="space-y-2">
-                  <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Technical Skills</h2>
+                  <h2 className={`text-[12px] font-bold uppercase tracking-wider border-b ${selectedTemplate === 'modern' ? 'border-blue-600 text-blue-600' : 'border-slate-800'} pb-0.5`}>Technical Skills</h2>
                   <div className="space-y-1">
                     {Object.entries(resumeData.skills).map(([key, val]) => (
                       <div key={key} className="flex gap-2">
@@ -990,7 +1078,7 @@ export default function DocumentsPage() {
                 {/* Section: Experience */}
                 {resumeData.experience && resumeData.experience.length > 0 && (
                   <div className="space-y-4">
-                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Experience</h2>
+                    <h2 className={`text-[12px] font-bold uppercase tracking-wider border-b ${selectedTemplate === 'modern' ? 'border-blue-600 text-blue-600' : 'border-slate-800'} pb-0.5`}>Experience</h2>
                     {resumeData.experience.map((exp, i) => (
                       <div key={i} className="space-y-2">
                         <div className="flex justify-between items-start">
@@ -1011,7 +1099,7 @@ export default function DocumentsPage() {
                 {/* Section: Projects */}
                 {resumeData.projects && resumeData.projects.length > 0 && (
                   <div className="space-y-4">
-                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Projects (Selected)</h2>
+                    <h2 className={`text-[12px] font-bold uppercase tracking-wider border-b ${selectedTemplate === 'modern' ? 'border-blue-600 text-blue-600' : 'border-slate-800'} pb-0.5`}>Projects (Selected)</h2>
                     {resumeData.projects.map((proj, i) => (
                       <div key={i} className="space-y-1">
                         <div className="font-bold text-[11px]">{proj.name}</div>
@@ -1029,7 +1117,7 @@ export default function DocumentsPage() {
                 {/* Section: Education */}
                 {resumeData.education && resumeData.education.length > 0 && (
                   <div className="space-y-3">
-                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Education</h2>
+                    <h2 className={`text-[12px] font-bold uppercase tracking-wider border-b ${selectedTemplate === 'modern' ? 'border-blue-600 text-blue-600' : 'border-slate-800'} pb-0.5`}>Education</h2>
                     {resumeData.education.map((edu, i) => (
                       <div key={i} className="flex justify-between items-start">
                         <div>
@@ -1043,13 +1131,13 @@ export default function DocumentsPage() {
                 )}
               </div>
             ) : (
-              <div className="space-y-10 font-serif leading-[1.6] text-slate-800 text-[11px] h-full flex flex-col">
+              <div className={`space-y-10 leading-[1.6] text-slate-800 text-[11px] h-full flex flex-col ${selectedTemplate === 'classic' ? 'font-serif' : 'font-sans'}`}>
                 {/* Sender Header (Matches Resume) */}
-                <div className="text-right space-y-0.5 border-b border-slate-100 pb-6 mb-10">
+                <div className={`${selectedTemplate === 'classic' ? 'text-right' : 'text-left border-l-4 border-blue-600 pl-4'} space-y-0.5 border-b border-slate-100 pb-6 mb-10`}>
                    <p className="font-bold text-lg text-slate-900 tracking-tight">{resumeData.fullName}</p>
-                   <p className="text-slate-500 font-medium">{resumeData.location}</p>
-                   <p className="text-slate-500 font-medium">{resumeData.email}</p>
-                   <p className="text-slate-500 font-medium">{resumeData.phone}</p>
+                   <p className="text-slate-550 font-medium">{resumeData.location}</p>
+                   <p className="text-slate-550 font-medium">{resumeData.email}</p>
+                   <p className="text-slate-550 font-medium">{resumeData.phone}</p>
                    <p className="text-slate-400 font-bold mt-2">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                 </div>
 
@@ -1071,11 +1159,11 @@ export default function DocumentsPage() {
                 </div>
 
                 {/* Signature Block */}
-                <div className="pt-12 mt-auto">
+                <div className={`pt-12 mt-auto ${selectedTemplate === 'classic' ? 'text-right' : 'text-left'}`}>
                    <p className="text-slate-500 mb-8 font-medium">Best Regards,</p>
                    <div className="space-y-1">
                       <p className="font-bold text-sm text-slate-900">{resumeData.fullName}</p>
-                      <p className="text-slate-500 font-medium italic">Enclosure: Resume</p>
+                      <p className="text-slate-550 font-medium italic">Enclosure: Resume</p>
                    </div>
                 </div>
               </div>
