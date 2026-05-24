@@ -1222,7 +1222,176 @@ function FeaturesSection() {
   );
 }
 
+function StepSimulator({ activeStep }: { activeStep: number }) {
+  const [profileText, setProfileText] = useState("");
+  
+  // Typing animation for Step 1
+  useEffect(() => {
+    if (activeStep !== 0) return;
+    setProfileText("");
+    const text = "React Developer";
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setProfileText((prev) => prev + text.charAt(i));
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  }, [activeStep]);
+
+  return (
+    <div className="w-full max-w-[860px] mx-auto bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden mt-12 min-h-[260px] flex flex-col md:flex-row items-center justify-between gap-8 animate-fadeIn">
+      {/* Glow background */}
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-brand/10 blur-[80px] rounded-full pointer-events-none" />
+      
+      {/* Left: Content */}
+      <div className="flex-1 space-y-4 text-left max-w-sm">
+        <span className="text-[10px] font-black text-brand tracking-[0.2em] uppercase bg-brand/10 border border-brand/20 px-3 py-1 rounded-full select-none">
+          Step {activeStep + 1} Demo
+        </span>
+        <h4 className="text-xl font-display font-extrabold text-white tracking-tight">
+          {
+            [
+              "Setting Up Your Job Preferences",
+              "Automated Scraping In Action",
+              "Instant Notification Dispatch",
+              "Pipeline Management & Tracking"
+            ][activeStep]
+          }
+        </h4>
+        <p className="text-xs text-slate-450 font-medium leading-relaxed">
+          {
+            [
+              "Input your target job keywords, salary minimums, and locations. Our AI uses these exact parameters to scan the web.",
+              "Every 4 hours, our background scrapers trigger a remote crawl, checking 12+ platforms concurrently and filtering out duplicates.",
+              "The moment a match is classified, we format the details and send it straight to your Telegram bot or email inbox.",
+              "Mark jobs as applied, manage interview schedules, and track your offers inside your unified workspace dashboard."
+            ][activeStep]
+          }
+        </p>
+      </div>
+
+      {/* Right: Visual simulator */}
+      <div className="w-full md:w-[360px] h-[180px] bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center justify-center relative overflow-hidden shrink-0">
+        
+        {/* Step 1 Visualizer: Profile Form */}
+        {activeStep === 0 && (
+          <div className="w-full space-y-2 text-slate-300 font-sans text-[11px] animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+              <span className="font-extrabold text-white">Target Position</span>
+              <span className="text-[9px] font-mono text-brand font-bold bg-brand/10 px-2 py-0.5 rounded">AUTO-TYPING</span>
+            </div>
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1">
+                <div className="text-[9px] font-black text-slate-550 uppercase tracking-widest">Title Input</div>
+                <div className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-white flex items-center gap-1">
+                  <span>{profileText}</span>
+                  <span className="w-1.5 h-3.5 bg-brand animate-pulse" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-1">
+                  <div className="text-[9px] font-black text-slate-550 uppercase tracking-widest">Location</div>
+                  <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold text-slate-300">Remote Only</div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="text-[9px] font-black text-slate-550 uppercase tracking-widest">Min Salary</div>
+                  <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold text-slate-300">₱90,000 / mo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 Visualizer: Scraper Radar */}
+        {activeStep === 1 && (
+          <div className="w-full h-full flex items-center justify-center relative animate-fadeIn select-none">
+            {/* Pulsing radar circles */}
+            <div className="absolute w-28 h-28 rounded-full border border-brand/20 animate-ping" />
+            <div className="absolute w-20 h-20 rounded-full border border-brand/30" />
+            <div className="absolute w-10 h-10 rounded-full border border-brand/50 flex items-center justify-center bg-brand/5">
+              <Search size={14} className="text-brand animate-pulse" />
+            </div>
+            {/* Scraped nodes */}
+            <div className="absolute top-4 left-6 px-2 py-1 rounded bg-slate-900 border border-slate-850 text-[8px] font-black text-emerald-400 animate-bounce">
+              We Work Remotely
+            </div>
+            <div className="absolute bottom-6 right-6 px-2 py-1 rounded bg-slate-900 border border-slate-850 text-[8px] font-black text-sky-400 animate-bounce delay-500">
+              OnlineJobs.ph
+            </div>
+            <div className="absolute top-10 right-4 px-2 py-1 rounded bg-slate-900 border border-slate-850 text-[8px] font-black text-purple-400 animate-bounce delay-1000">
+              RemoteOK
+            </div>
+          </div>
+        )}
+
+        {/* Step 3 Visualizer: Alert Notification */}
+        {activeStep === 2 && (
+          <div className="w-full space-y-3 text-left animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-850 pb-2 select-none">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">Device Notification Mockup</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex gap-3 shadow-lg max-w-[280px] mx-auto animate-bounce">
+              <div className="w-8 h-8 rounded-full bg-sky-500 shrink-0 flex items-center justify-center text-white">
+                <Send size={14} className="fill-white translate-x-[-0.5px] translate-y-[0.5px]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] font-black text-sky-400 uppercase tracking-widest mb-0.5">Telegram Alert</div>
+                <p className="text-[10px] text-white font-extrabold truncate">Stripe: React Dev Role Found</p>
+                <p className="text-[8px] text-slate-400 font-semibold truncate mt-0.5">₱140k/mo • Verified Employer</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4 Visualizer: Tracking Pipeline */}
+        {activeStep === 3 && (
+          <div className="w-full space-y-2 text-left animate-fadeIn select-none">
+            <div className="flex justify-between items-center border-b border-slate-850 pb-2">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dashboard Pipeline</span>
+              <span className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-widest animate-pulse">Offer Received!</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center pt-1.5">
+              {[
+                { name: "Applied", active: false },
+                { name: "Interview", active: false },
+                { name: "Offer", active: true }
+              ].map((c) => (
+                <div key={c.name} className="flex flex-col gap-1.5">
+                  <span className={`text-[7px] font-black uppercase tracking-wider ${c.active ? "text-emerald-500" : "text-slate-550"}`}>
+                    {c.name}
+                  </span>
+                  <div className={`p-1.5 rounded-xl border flex flex-col items-center justify-center min-h-[48px] ${
+                    c.active 
+                      ? "bg-emerald-950/40 border-emerald-500/40 shadow-md shadow-emerald-500/5" 
+                      : "bg-slate-900 border-slate-850 opacity-40"
+                  }`}>
+                    {c.active ? (
+                      <div className="w-full rounded bg-slate-900 border border-emerald-500/30 p-1 text-left animate-pulse">
+                        <div className="text-[8px] font-black text-white truncate">Canva React Dev</div>
+                        <div className="text-[6px] font-bold text-emerald-400 leading-none mt-0.5">₱120k/mo</div>
+                      </div>
+                    ) : (
+                      <div className="w-1 h-1 rounded-full bg-slate-700" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function HowItWorksSection() {
+  const [activeStep, setActiveStep] = useState(0);
+
   const steps = [
     {
       num: "01",
@@ -1249,10 +1418,11 @@ function HowItWorksSection() {
       desc: "Apply directly, then track progress from your dashboard — all in one organized view.",
     },
   ];
+
   return (
-    <section id="how-it-works" className="py-20 md:py-32 px-6 bg-surface">
-      <div className="max-w-[1200px] mx-auto">
-        <div className="text-center mb-16">
+    <section id="how-it-works" className="py-20 md:py-32 px-6 bg-surface relative overflow-hidden">
+      <div className="max-w-[1200px] mx-auto relative z-10">
+        <div className="text-center mb-20">
           <div className="inline-block px-3.5 py-1 rounded-full bg-brand-light text-[12px] font-bold text-brand tracking-widest uppercase mb-4">
             How it Works
           </div>
@@ -1260,30 +1430,62 @@ function HowItWorksSection() {
             From signup to offer in 4 steps
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((s, i) => (
-            <div key={s.num} className="text-center group">
-              <div
-                className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mx-auto mb-5 transition-all duration-300 ${
-                  i === 0
-                    ? "bg-brand text-white shadow-lg shadow-brand/35"
-                    : "bg-white border-2 border-border text-brand"
-                }`}
-              >
-                {s.icon}
-              </div>
-              <div className="text-[11px] font-extrabold text-brand tracking-[0.15em] mb-2 uppercase">
-                {s.num}
-              </div>
-              <h3 className="font-display text-base font-bold text-ink mb-2.5">
-                {s.title}
-              </h3>
-              <p className="text-sm text-ink-3 leading-relaxed font-medium">
-                {s.desc}
-              </p>
-            </div>
-          ))}
+
+        {/* Steps Grid */}
+        <div className="relative">
+          {/* Timeline connective progress line (desktop only) */}
+          <div className="hidden lg:block absolute top-[36px] left-[10%] right-[10%] h-[2px] bg-slate-200 z-0">
+            <div 
+              className="h-full bg-gradient-to-r from-brand to-accent transition-all duration-500 ease-out"
+              style={{ width: `${(activeStep / 3) * 100}%` }}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+            {steps.map((s, i) => {
+              const isPassed = i <= activeStep;
+              const isActive = i === activeStep;
+
+              return (
+                <div 
+                  key={s.num} 
+                  onMouseEnter={() => setActiveStep(i)}
+                  className={`text-center group p-6 rounded-3xl border border-transparent transition-all duration-500 cursor-pointer ${
+                    isActive 
+                      ? "bg-white border-slate-200/80 shadow-md shadow-brand/5" 
+                      : "hover:bg-white/40 hover:border-slate-200/50"
+                  }`}
+                >
+                  <div
+                    className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mx-auto mb-5 transition-all duration-500 transform ${
+                      isActive ? "scale-110 shadow-lg" : ""
+                    } ${
+                      isPassed
+                        ? "bg-brand text-white shadow-brand/20"
+                        : "bg-white border-2 border-slate-200 text-slate-400 group-hover:border-brand/40 group-hover:text-brand"
+                    }`}
+                  >
+                    {s.icon}
+                  </div>
+                  <div className={`text-[10px] font-black tracking-[0.2em] mb-2 uppercase transition-colors ${
+                    isPassed ? "text-brand" : "text-slate-400"
+                  }`}>
+                    Step {s.num}
+                  </div>
+                  <h3 className="font-display text-base font-bold text-ink mb-2.5">
+                    {s.title}
+                  </h3>
+                  <p className="text-xs text-ink-3 leading-relaxed font-medium">
+                    {s.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Live Simulator View */}
+        <StepSimulator activeStep={activeStep} />
       </div>
     </section>
   );

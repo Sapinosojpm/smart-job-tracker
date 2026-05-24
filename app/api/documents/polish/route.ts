@@ -37,6 +37,11 @@ Instructions:
 4. Keep the output structure EXACTLY the same as the input JSON.
 5. Return ONLY a valid JSON object matching the exact keys: fullName, location, email, phone, github, linkedin, summary, skills (languages, frontend, backend, databases, tools, other, concepts), experience (array of objects with title, company, date, bullets), projects (array of objects with name, link, bullets), education (array of objects with degree, school, date). Do not enclose in markdown code blocks or add any additional text.`;
     } else if (type === 'cover-letter') {
+      const isCompanyConfidential = !letterData.company || 
+        /confidential|n\/?a|none|not specified|walang company/i.test(letterData.company);
+      
+      const companyVal = isCompanyConfidential ? 'Not Specified (Confidential / Direct Application)' : letterData.company;
+
       prompt = `You are an elite career consultant writing a tailored cover letter.
 Candidate details:
 - Name: ${resumeData.fullName}
@@ -45,13 +50,18 @@ Candidate details:
 
 Target Position:
 - Role: ${letterData.role}
-- Company: ${letterData.company}
+- Company: ${companyVal}
 - Recipient: ${letterData.recipient}
-
+${letterData.salary ? `- Salary/Compensation Rate: ${letterData.salary}\n` : ''}${letterData.hoursPerWeek ? `- Hours per Week: ${letterData.hoursPerWeek}\n` : ''}${letterData.workType ? `- Work Type: ${letterData.workType}\n` : ''}
 ${letterData.jobDescription ? `Job Description / Post Details:\n${letterData.jobDescription}\n` : ''}
 
-Write a persuasive, highly professional, and compelling cover letter tailored specifically to align the candidate's skills with the target position and the details of the job post provided above. Keep it authentic, engaging, and professional. 
-Return ONLY the written cover letter body text paragraphs. Do not include markdown headers, subject lines, greeting salutations, or sign-offs. Just output the clean body content paragraphs.`;
+Write a persuasive, highly professional, and compelling cover letter tailored specifically to align the candidate's skills with the target position and the details of the job post provided above. Keep it authentic, engaging, and professional.
+
+CRITICAL INSTRUCTIONS:
+1. ${isCompanyConfidential ? "Do NOT invent a company name and do NOT use placeholders like '[Company Name]' or '[Company]'. Write the cover letter naturally referring to 'your organization', 'your team', or 'the client' where necessary, or omit company mentions altogether, focusing on the role itself." : `The company name is "${letterData.company}". Refer to it naturally without placeholders.`}
+2. Align the tone with the job description. If a salary rate (${letterData.salary || 'N/A'}), hours (${letterData.hoursPerWeek || 'N/A'}), or work type (${letterData.workType || 'N/A'}) is specified, weave in matching professional assurances (e.g., capability to commit to full-time hours, or remote collaboration efficiency) where appropriate, without being overly transactional.
+3. Highlight relevant skills from the candidate's skills list (${JSON.stringify(resumeData.skills)}) that match the job description.
+4. Return ONLY the written cover letter body text paragraphs. Do not include markdown headers, subject lines, greeting salutations, or sign-offs. Just output the clean body content paragraphs.`;
     } else {
       return NextResponse.json({ success: false, error: 'Invalid document type.' }, { status: 400 });
     }

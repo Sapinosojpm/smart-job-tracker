@@ -39,4 +39,7 @@ export type LetterData = {
   role: string;
   jobDescription: string;
   content: string;
+  salary?: string;
+  hoursPerWeek?: string;
+  workType?: string;
 };

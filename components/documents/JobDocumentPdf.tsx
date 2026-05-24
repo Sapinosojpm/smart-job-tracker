@@ -375,9 +375,11 @@ function CoverLetterPdf({
 
       <View style={styles.recipientBlock}>
         <Text style={styles.recipientLabel}>Recipient Details</Text>
-        <Text style={styles.recipientName}>{letterData.recipient}</Text>
-        <Text style={styles.recipientRole}>{letterData.role}</Text>
-        <Text style={styles.recipientCompany}>{letterData.company}</Text>
+        {letterData.recipient ? <Text style={styles.recipientName}>{letterData.recipient}</Text> : null}
+        {letterData.role ? <Text style={styles.recipientRole}>{letterData.role}</Text> : null}
+        {letterData.company && !/confidential|n\/?a|none|not specified|walang company/i.test(letterData.company) ? (
+          <Text style={styles.recipientCompany}>{letterData.company}</Text>
+        ) : null}
       </View>
 
       <View style={styles.contentBlock}>

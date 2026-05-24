@@ -29,6 +29,7 @@ import {
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<DocType>('resume');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'TEAM'>('FREE');
   const [showPlanModal, setShowPlanModal] = useState(false);
@@ -91,7 +92,10 @@ export default function DocumentsPage() {
     company: 'Tech Solutions Inc.',
     role: 'Senior React Developer',
     jobDescription: '',
-    content: ''
+    content: '',
+    salary: '',
+    hoursPerWeek: '',
+    workType: ''
   });
 
   // Helper Functions for Dynamic Fields
@@ -132,6 +136,45 @@ export default function DocumentsPage() {
     const newEdu = [...resumeData.education];
     newEdu.splice(index, 1);
     setResumeData({ ...resumeData, education: newEdu });
+  };
+
+  const handleExtractInfo = async () => {
+    if (!letterData.jobDescription || !letterData.jobDescription.trim()) {
+      toast.warning('Please paste a job description first.');
+      return;
+    }
+    if (userPlan !== 'TEAM') {
+      toast.warning('AI Job Details Extraction requires the ELITE Plan. Upgrade now to unlock!');
+      setShowPlanModal(true);
+      return;
+    }
+    setIsExtracting(true);
+    try {
+      const res = await fetch('/api/documents/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobDescription: letterData.jobDescription })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to extract job details');
+
+      const extracted = data.data;
+      setLetterData(prev => ({
+        ...prev,
+        company: extracted.company || '',
+        role: extracted.role || '',
+        recipient: extracted.recipient || 'Hiring Manager',
+        salary: extracted.salary || '',
+        hoursPerWeek: extracted.hoursPerWeek || '',
+        workType: extracted.workType || ''
+      }));
+      toast.success('Successfully extracted details from job post!');
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'An error occurred while extracting.');
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   const handleGenerateAI = async () => {
@@ -756,6 +799,7 @@ export default function DocumentsPage() {
                       <input 
                         value={letterData.company} 
                         onChange={e => setLetterData({...letterData, company: e.target.value})} 
+                        placeholder="e.g. Tech Solutions Inc. (Leave empty if confidential)"
                         className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
                       />
                     </div>
@@ -770,13 +814,76 @@ export default function DocumentsPage() {
                         className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
                       />
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <User size={12} className="text-slate-400" />
+                        Recipient Name / Title
+                      </label>
+                      <input 
+                        value={letterData.recipient} 
+                        onChange={e => setLetterData({...letterData, recipient: e.target.value})} 
+                        placeholder="e.g. Hiring Manager"
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Salary / Compensation
+                      </label>
+                      <input 
+                        value={letterData.salary || ''} 
+                        onChange={e => setLetterData({...letterData, salary: e.target.value})} 
+                        placeholder="e.g. $18 per hour (optional)"
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Hours Per Week
+                      </label>
+                      <input 
+                        value={letterData.hoursPerWeek || ''} 
+                        onChange={e => setLetterData({...letterData, hoursPerWeek: e.target.value})} 
+                        placeholder="e.g. 40 (optional)"
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                        <Briefcase size={12} className="text-slate-400" />
+                        Type of Work
+                      </label>
+                      <input 
+                        value={letterData.workType || ''} 
+                        onChange={e => setLetterData({...letterData, workType: e.target.value})} 
+                        placeholder="e.g. Full Time (optional)"
+                        className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none font-bold text-slate-800 transition-all text-sm shadow-sm" 
+                      />
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                      Job Description / Post Details
-                    </label>
+                    <div className="flex items-center justify-between ml-1">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Job Description / Post Details
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleExtractInfo}
+                        disabled={isExtracting}
+                        className="flex items-center gap-1 px-3 py-1 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 rounded-xl font-bold text-[9px] uppercase tracking-wider transition-all border border-indigo-100/50 cursor-pointer disabled:opacity-50"
+                      >
+                        {isExtracting ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : (
+                          <Sparkles size={10} />
+                        )}
+                        <span>{isExtracting ? 'Extracting...' : 'AI Extract Info'}</span>
+                      </button>
+                    </div>
                     <textarea 
                       rows={5} 
                       value={letterData.jobDescription} 
@@ -943,9 +1050,11 @@ export default function DocumentsPage() {
                 {/* Recipient Block */}
                 <div className="space-y-1 mb-8">
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Recipient Details</p>
-                   <p className="font-bold text-slate-900 text-sm">{letterData.recipient}</p>
-                   <p className="font-bold text-slate-700 italic">{letterData.role}</p>
-                   <p className="font-bold text-slate-900">{letterData.company}</p>
+                   {letterData.recipient && <p className="font-bold text-slate-900 text-sm">{letterData.recipient}</p>}
+                   {letterData.role && <p className="font-bold text-slate-700 italic">{letterData.role}</p>}
+                   {letterData.company && !/confidential|n\/?a|none|not specified|walang company/i.test(letterData.company) && (
+                     <p className="font-bold text-slate-900">{letterData.company}</p>
+                   )}
                 </div>
 
                 {/* Content */}
