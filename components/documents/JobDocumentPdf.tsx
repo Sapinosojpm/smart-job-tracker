@@ -265,89 +265,95 @@ function ResumePdf({ resumeData }: { resumeData: ResumeData }) {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Experience</Text>
-        <View style={styles.entryList}>
-          {resumeData.experience.map((exp, index) => (
-            <View
-              key={`${exp.title}-${index}`}
-              style={styles.entryBlock}
-              wrap={false}
-            >
-              <View style={styles.entryHeader}>
-                <Text style={styles.entryTitle}>{exp.title}</Text>
-                <Text style={styles.entryDate}>{exp.date}</Text>
+      {resumeData.experience && resumeData.experience.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Experience</Text>
+          <View style={styles.entryList}>
+            {resumeData.experience.map((exp, index) => (
+              <View
+                key={`${exp.title}-${index}`}
+                style={styles.entryBlock}
+                wrap={false}
+              >
+                <View style={styles.entryHeader}>
+                  <Text style={styles.entryTitle}>{exp.title}</Text>
+                  <Text style={styles.entryDate}>{exp.date}</Text>
+                </View>
+                <Text style={styles.entryCompany}>{exp.company}</Text>
+                <View style={styles.bulletList}>
+                  {exp.bullets
+                    .filter((bullet) => bullet.trim())
+                    .map((bullet, bulletIndex) => (
+                      <View
+                        key={`${exp.title}-bullet-${bulletIndex}`}
+                        style={styles.bulletRow}
+                      >
+                        <Text style={styles.bulletMark}>•</Text>
+                        <Text style={styles.bulletText}>{bullet}</Text>
+                      </View>
+                    ))}
+                </View>
               </View>
-              <Text style={styles.entryCompany}>{exp.company}</Text>
-              <View style={styles.bulletList}>
-                {exp.bullets
-                  .filter((bullet) => bullet.trim())
-                  .map((bullet, bulletIndex) => (
-                    <View
-                      key={`${exp.title}-bullet-${bulletIndex}`}
-                      style={styles.bulletRow}
-                    >
-                      <Text style={styles.bulletMark}>•</Text>
-                      <Text style={styles.bulletText}>{bullet}</Text>
-                    </View>
-                  ))}
-              </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
+      ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Projects (Selected)</Text>
-        <View style={styles.entryList}>
-          {resumeData.projects.map((project, index) => (
-            <View
-              key={`${project.name}-${index}`}
-              style={styles.entryBlock}
-              wrap={false}
-            >
-              <Text style={styles.entryTitleSm}>{project.name}</Text>
-              {project.link.trim() ? (
-                <Link src={ensureUrl(project.link)} style={styles.projectLink}>
-                  {project.link}
-                </Link>
-              ) : null}
-              <View style={styles.bulletList}>
-                {project.bullets
-                  .filter((bullet) => bullet.trim())
-                  .map((bullet, bulletIndex) => (
-                    <View
-                      key={`${project.name}-bullet-${bulletIndex}`}
-                      style={styles.bulletRow}
-                    >
-                      <Text style={styles.bulletMark}>•</Text>
-                      <Text style={styles.bulletText}>{bullet}</Text>
-                    </View>
-                  ))}
+      {resumeData.projects && resumeData.projects.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Projects (Selected)</Text>
+          <View style={styles.entryList}>
+            {resumeData.projects.map((project, index) => (
+              <View
+                key={`${project.name}-${index}`}
+                style={styles.entryBlock}
+                wrap={false}
+              >
+                <Text style={styles.entryTitleSm}>{project.name}</Text>
+                {project.link.trim() ? (
+                  <Link src={ensureUrl(project.link)} style={styles.projectLink}>
+                    {project.link}
+                  </Link>
+                ) : null}
+                <View style={styles.bulletList}>
+                  {project.bullets
+                    .filter((bullet) => bullet.trim())
+                    .map((bullet, bulletIndex) => (
+                      <View
+                        key={`${project.name}-bullet-${bulletIndex}`}
+                        style={styles.bulletRow}
+                      >
+                        <Text style={styles.bulletMark}>•</Text>
+                        <Text style={styles.bulletText}>{bullet}</Text>
+                      </View>
+                    ))}
+                </View>
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
+      ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Education</Text>
-        <View style={styles.entryList}>
-          {resumeData.education.map((education, index) => (
-            <View
-              key={`${education.degree}-${index}`}
-              style={styles.educationRow}
-              wrap={false}
-            >
-              <View>
-                <Text style={styles.entryTitleSm}>{education.degree}</Text>
-                <Text style={styles.educationSchool}>{education.school}</Text>
+      {resumeData.education && resumeData.education.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Education</Text>
+          <View style={styles.entryList}>
+            {resumeData.education.map((education, index) => (
+              <View
+                key={`${education.degree}-${index}`}
+                style={styles.educationRow}
+                wrap={false}
+              >
+                <View>
+                  <Text style={styles.entryTitleSm}>{education.degree}</Text>
+                  <Text style={styles.educationSchool}>{education.school}</Text>
+                </View>
+                <Text style={styles.entryDate}>{education.date}</Text>
               </View>
-              <Text style={styles.entryDate}>{education.date}</Text>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }

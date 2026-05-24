@@ -988,53 +988,59 @@ export default function DocumentsPage() {
                 </div>
 
                 {/* Section: Experience */}
-                <div className="space-y-4">
-                  <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Experience</h2>
-                  {resumeData.experience.map((exp, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="font-bold text-[12px]">{exp.title}</div>
-                        <div className="font-bold italic">{exp.date}</div>
+                {resumeData.experience && resumeData.experience.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Experience</h2>
+                    {resumeData.experience.map((exp, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="font-bold text-[12px]">{exp.title}</div>
+                          <div className="font-bold italic">{exp.date}</div>
+                        </div>
+                        <div className="font-medium">{exp.company}</div>
+                        <ul className="list-disc pl-5 space-y-1 text-slate-800">
+                          {exp.bullets.map((b, bi) => (
+                            <li key={bi}>{b}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <div className="font-medium">{exp.company}</div>
-                      <ul className="list-disc pl-5 space-y-1 text-slate-800">
-                        {exp.bullets.map((b, bi) => (
-                          <li key={bi}>{b}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Section: Projects */}
-                <div className="space-y-4">
-                  <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Projects (Selected)</h2>
-                  {resumeData.projects.map((proj, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="font-bold text-[11px]">{proj.name}</div>
-                      <div className="text-black text-[10px]">{proj.link}</div>
-                      <ul className="list-disc pl-5 space-y-0.5 text-slate-800">
-                        {proj.bullets.map((b, bi) => (
-                          <li key={bi}>{b}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+                {resumeData.projects && resumeData.projects.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Projects (Selected)</h2>
+                    {resumeData.projects.map((proj, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="font-bold text-[11px]">{proj.name}</div>
+                        <div className="text-black text-[10px]">{proj.link}</div>
+                        <ul className="list-disc pl-5 space-y-0.5 text-slate-800">
+                          {proj.bullets.map((b, bi) => (
+                            <li key={bi}>{b}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Section: Education */}
-                <div className="space-y-3">
-                  <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Education</h2>
-                  {resumeData.education.map((edu, i) => (
-                    <div key={i} className="flex justify-between items-start">
-                      <div>
-                        <div className="font-bold">{edu.degree}</div>
-                        <div className="font-medium text-slate-700">{edu.school}</div>
+                {resumeData.education && resumeData.education.length > 0 && (
+                  <div className="space-y-3">
+                    <h2 className="text-[12px] font-bold uppercase tracking-wider border-b border-slate-800 pb-0.5">Education</h2>
+                    {resumeData.education.map((edu, i) => (
+                      <div key={i} className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold">{edu.degree}</div>
+                          <div className="font-medium text-slate-700">{edu.school}</div>
+                        </div>
+                        <div className="font-bold italic">{edu.date}</div>
                       </div>
-                      <div className="font-bold italic">{edu.date}</div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-10 font-serif leading-[1.6] text-slate-800 text-[11px] h-full flex flex-col">
